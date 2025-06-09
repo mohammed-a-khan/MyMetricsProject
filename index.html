@@ -1458,23 +1458,47 @@
             try {
                 const authHeader = 'Basic ' + btoa(':' + patToken);
                 
-                // Get work items from selected boards
-                const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?$expand=all&api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
+                // Get work items from current iteration using proper WIQL query
+                const wiqlQuery = {
+                    query: `SELECT [System.Id], [System.State], [System.WorkItemType] FROM WorkItems WHERE [System.TeamProject] = '${project}' ORDER BY [System.CreatedDate] DESC`
+                };
+                
+                const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(wiqlQuery)
                 });
                 
                 if (!workItemsResponse.ok) {
                     throw new Error(`Work items API failed: ${workItemsResponse.status}`);
                 }
                 
-                const workItems = await workItemsResponse.json();
+                const workItemsResult = await workItemsResponse.json();
+                const workItemIds = workItemsResult.workItems.map(wi => wi.id);
+                
+                if (workItemIds.length === 0) {
+                    return '0%';
+                }
+                
+                // Get work item details
+                const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.slice(0, 200).join(',')}&api-version=7.0`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                
+                if (!detailsResponse.ok) {
+                    throw new Error(`Work item details API failed: ${detailsResponse.status}`);
+                }
+                
+                const workItems = await detailsResponse.json();
                 
                 // Calculate real project health metrics
                 const totalItems = workItems.value.length;
+                const completedStates = ['Closed', 'Done', 'Resolved', 'Completed'];
                 const completedItems = workItems.value.filter(item => 
-                    item.fields['System.State'] === 'Closed' || 
-                    item.fields['System.State'] === 'Done' ||
-                    item.fields['System.State'] === 'Resolved'
+                    completedStates.includes(item.fields['System.State'])
                 ).length;
                 
                 const healthPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
@@ -1491,8 +1515,24 @@
             try {
                 const authHeader = 'Basic ' + btoa(':' + patToken);
                 
-                // Get iterations from Azure DevOps
-                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/work/teamsettings/iterations?api-version=7.0`, {
+                // Get teams first to get iterations
+                const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                
+                if (!teamsResponse.ok) {
+                    throw new Error(`Teams API failed: ${teamsResponse.status}`);
+                }
+                
+                const teams = await teamsResponse.json();
+                const defaultTeam = teams.value[0];
+                
+                if (!defaultTeam) {
+                    return '0';
+                }
+                
+                // Get team iterations
+                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?api-version=7.0`, {
                     headers: { 'Authorization': authHeader }
                 });
                 
@@ -1503,26 +1543,56 @@
                 const iterations = await iterationsResponse.json();
                 
                 // Get last 3 completed iterations
+                const now = new Date();
                 const completedIterations = iterations.value
-                    .filter(iter => new Date(iter.attributes.finishDate) < new Date())
+                    .filter(iter => {
+                        if (iter.attributes?.finishDate) {
+                            return new Date(iter.attributes.finishDate) < now;
+                        }
+                        return false;
+                    })
                     .slice(-3);
+                
+                if (completedIterations.length === 0) {
+                    return '0';
+                }
                 
                 let totalStoryPoints = 0;
                 let iterationCount = 0;
                 
                 for (const iteration of completedIterations) {
-                    const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?$expand=all&api-version=7.0&wiql=SELECT [System.Id] FROM WorkItems WHERE [System.IterationPath] = '${iteration.path}'`, {
-                        headers: { 'Authorization': authHeader }
+                    const wiqlQuery = {
+                        query: `SELECT [System.Id], [Microsoft.VSTS.Scheduling.StoryPoints] FROM WorkItems WHERE [System.IterationPath] = '${iteration.path}' AND [System.State] IN ('Closed', 'Done', 'Resolved')`
+                    };
+                    
+                    const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': authHeader,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(wiqlQuery)
                     });
                     
                     if (workItemsResponse.ok) {
-                        const workItems = await workItemsResponse.json();
-                        const storyPoints = workItems.value
-                            .map(item => item.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0)
-                            .reduce((sum, points) => sum + points, 0);
+                        const workItemsResult = await workItemsResponse.json();
+                        const workItemIds = workItemsResult.workItems.map(wi => wi.id);
                         
-                        totalStoryPoints += storyPoints;
-                        iterationCount++;
+                        if (workItemIds.length > 0) {
+                            const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.join(',')}&api-version=7.0`, {
+                                headers: { 'Authorization': authHeader }
+                            });
+                            
+                            if (detailsResponse.ok) {
+                                const workItems = await detailsResponse.json();
+                                const storyPoints = workItems.value
+                                    .map(item => parseFloat(item.fields['Microsoft.VSTS.Scheduling.StoryPoints']) || 0)
+                                    .reduce((sum, points) => sum + points, 0);
+                                
+                                totalStoryPoints += storyPoints;
+                                iterationCount++;
+                            }
+                        }
                     }
                 }
                 
@@ -1550,31 +1620,27 @@
                 
                 const testPlans = await testPlansResponse.json();
                 
+                if (testPlans.value.length === 0) {
+                    return '0%';
+                }
+                
                 let totalTests = 0;
                 let passedTests = 0;
                 
-                for (const plan of testPlans.value) {
-                    const testCasesResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/test/plans/${plan.id}/suites?api-version=7.0`, {
-                        headers: { 'Authorization': authHeader }
-                    });
+                // Get recent test runs
+                const testRunsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/test/runs?api-version=7.0`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                
+                if (testRunsResponse.ok) {
+                    const testRuns = await testRunsResponse.json();
                     
-                    if (testCasesResponse.ok) {
-                        const testSuites = await testCasesResponse.json();
-                        
-                        for (const suite of testSuites.value) {
-                            const resultsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/test/runs?planId=${plan.id}&api-version=7.0`, {
-                                headers: { 'Authorization': authHeader }
-                            });
-                            
-                            if (resultsResponse.ok) {
-                                const results = await resultsResponse.json();
-                                results.value.forEach(run => {
-                                    totalTests += run.totalTests || 0;
-                                    passedTests += run.passedTests || 0;
-                                });
-                            }
+                    testRuns.value.forEach(run => {
+                        if (run.totalTests) {
+                            totalTests += run.totalTests;
+                            passedTests += run.passedTests || 0;
                         }
-                    }
+                    });
                 }
                 
                 const coveragePercentage = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
@@ -1590,7 +1656,7 @@
             try {
                 const authHeader = 'Basic ' + btoa(':' + patToken);
                 
-                // Get latest build definitions and results
+                // Get latest build results
                 const buildsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/build/builds?$top=1&statusFilter=completed&api-version=7.0`, {
                     headers: { 'Authorization': authHeader }
                 });
@@ -1618,8 +1684,24 @@
             try {
                 const authHeader = 'Basic ' + btoa(':' + patToken);
                 
+                // Get teams first
+                const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                
+                if (!teamsResponse.ok) {
+                    throw new Error(`Teams API failed: ${teamsResponse.status}`);
+                }
+                
+                const teams = await teamsResponse.json();
+                const defaultTeam = teams.value[0];
+                
+                if (!defaultTeam) {
+                    return 'No Teams';
+                }
+                
                 // Get current iteration
-                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/work/teamsettings/iterations?$timeframe=current&api-version=7.0`, {
+                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?$timeframe=current&api-version=7.0`, {
                     headers: { 'Authorization': authHeader }
                 });
                 
@@ -1629,38 +1711,73 @@
                 
                 const iterations = await iterationsResponse.json();
                 
-                if (iterations.value.length > 0) {
-                    const currentIteration = iterations.value[0];
-                    const endDate = new Date(currentIteration.attributes.finishDate);
-                    const now = new Date();
-                    const totalDays = (endDate - new Date(currentIteration.attributes.startDate)) / (1000 * 60 * 60 * 24);
-                    const daysRemaining = Math.max(0, (endDate - now) / (1000 * 60 * 60 * 24));
-                    
-                    // Get work items for current iteration
-                    const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?$expand=all&api-version=7.0&wiql=SELECT [System.Id] FROM WorkItems WHERE [System.IterationPath] = '${currentIteration.path}'`, {
-                        headers: { 'Authorization': authHeader }
-                    });
-                    
-                    if (workItemsResponse.ok) {
-                        const workItems = await workItemsResponse.json();
-                        const totalItems = workItems.value.length;
-                        const completedItems = workItems.value.filter(item => 
-                            item.fields['System.State'] === 'Closed' || 
-                            item.fields['System.State'] === 'Done'
-                        ).length;
-                        
-                        const completionRate = totalItems > 0 ? (completedItems / totalItems) : 0;
-                        const daysElapsed = totalDays - daysRemaining;
-                        const expectedProgress = daysElapsed / totalDays;
-                        
-                        // Calculate forecast based on current progress vs expected
-                        const forecastPercentage = expectedProgress > 0 ? Math.min(100, Math.round((completionRate / expectedProgress) * 100)) : 0;
-                        
-                        return `${forecastPercentage}%`;
-                    }
+                if (iterations.value.length === 0) {
+                    return 'No Current Sprint';
                 }
                 
-                return 'No Current Sprint';
+                const currentIteration = iterations.value[0];
+                if (!currentIteration.attributes?.startDate || !currentIteration.attributes?.finishDate) {
+                    return 'Invalid Sprint Dates';
+                }
+                
+                const endDate = new Date(currentIteration.attributes.finishDate);
+                const startDate = new Date(currentIteration.attributes.startDate);
+                const now = new Date();
+                
+                const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                const daysElapsed = Math.max(0, (now - startDate) / (1000 * 60 * 60 * 24));
+                
+                // Get work items for current iteration
+                const wiqlQuery = {
+                    query: `SELECT [System.Id], [System.State] FROM WorkItems WHERE [System.IterationPath] = '${currentIteration.path}'`
+                };
+                
+                const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(wiqlQuery)
+                });
+                
+                if (!workItemsResponse.ok) {
+                    throw new Error(`Work items query failed: ${workItemsResponse.status}`);
+                }
+                
+                const workItemsResult = await workItemsResponse.json();
+                const workItemIds = workItemsResult.workItems.map(wi => wi.id);
+                
+                if (workItemIds.length === 0) {
+                    return '0%';
+                }
+                
+                const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.join(',')}&api-version=7.0`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                
+                if (!detailsResponse.ok) {
+                    throw new Error(`Work item details failed: ${detailsResponse.status}`);
+                }
+                
+                const workItems = await detailsResponse.json();
+                const totalItems = workItems.value.length;
+                const completedStates = ['Closed', 'Done', 'Resolved', 'Completed'];
+                const completedItems = workItems.value.filter(item => 
+                    completedStates.includes(item.fields['System.State'])
+                ).length;
+                
+                const actualProgress = totalItems > 0 ? (completedItems / totalItems) : 0;
+                const expectedProgress = totalDays > 0 ? (daysElapsed / totalDays) : 0;
+                
+                // Calculate forecast based on current progress vs timeline
+                let forecastPercentage = 100;
+                if (expectedProgress > 0) {
+                    const progressRatio = actualProgress / expectedProgress;
+                    forecastPercentage = Math.min(100, Math.max(0, Math.round(progressRatio * 100)));
+                }
+                
+                return `${forecastPercentage}%`;
                 
             } catch (error) {
                 console.error('Sprint forecast calculation failed:', error);
@@ -1924,9 +2041,9 @@
 
                     this.updateConnectionStatus('testing', 'Testing connection...');
                     
-                    // Test connection with Azure DevOps
+                    // Test connection with Azure DevOps - CORRECTED URL FORMAT
                     const authHeader = 'Basic ' + btoa(':' + pat);
-                    const testUrl = `https://dev.azure.com/${org}/${project}/_apis/projects/${project}?api-version=7.0`;
+                    const testUrl = `https://dev.azure.com/${org}/_apis/projects/${project}?api-version=7.0`;
                     
                     const response = await fetch(testUrl, {
                         headers: {
@@ -1985,7 +2102,7 @@
                     const { org, project, patToken } = this.config.connection;
                     const authHeader = 'Basic ' + btoa(':' + patToken);
                     
-                    // Get teams first
+                    // Get teams first - CORRECTED URL FORMAT
                     const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
                         headers: { 'Authorization': authHeader }
                     });
@@ -1994,7 +2111,7 @@
                         const teams = await teamsResponse.json();
                         this.config.boards.available = [];
                         
-                        // Get boards for each team
+                        // Get boards for each team - CORRECTED URL FORMAT
                         for (const team of teams.value) {
                             try {
                                 const boardsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${team.id}/_apis/work/boards?api-version=7.0`, {
@@ -2032,7 +2149,7 @@
                     const { org, project, patToken } = this.config.connection;
                     const authHeader = 'Basic ' + btoa(':' + patToken);
                     
-                    // Get team members
+                    // Get team members - CORRECTED URL FORMAT
                     const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
                         headers: { 'Authorization': authHeader }
                     });
@@ -2041,7 +2158,7 @@
                         const teams = await teamsResponse.json();
                         this.config.resources.available = [];
                         
-                        // Get members for each team
+                        // Get members for each team - CORRECTED URL FORMAT
                         for (const team of teams.value) {
                             try {
                                 const membersResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams/${team.id}/members?api-version=7.0`, {
@@ -2081,36 +2198,52 @@
                     const { org, project, patToken } = this.config.connection;
                     const authHeader = 'Basic ' + btoa(':' + patToken);
                     
-                    // Get iterations
-                    const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/work/teamsettings/iterations?api-version=7.0`, {
+                    // Get iterations - CORRECTED URL FORMAT (needs team context)
+                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
                         headers: { 'Authorization': authHeader }
                     });
                     
-                    if (iterationsResponse.ok) {
-                        const iterations = await iterationsResponse.json();
-                        this.config.iterations.available = iterations.value.map(iter => ({
-                            id: iter.id,
-                            name: iter.name,
-                            path: iter.path,
-                            startDate: iter.attributes.startDate,
-                            finishDate: iter.attributes.finishDate,
-                            url: iter.url
-                        }));
+                    if (teamsResponse.ok) {
+                        const teams = await teamsResponse.json();
+                        this.config.iterations.available = [];
                         
-                        // Auto-select current iteration
-                        const now = new Date();
-                        const currentIteration = this.config.iterations.available.find(iter => {
-                            const start = new Date(iter.startDate);
-                            const end = new Date(iter.finishDate);
-                            return now >= start && now <= end;
-                        });
-                        
-                        if (currentIteration) {
-                            this.config.iterations.selected = currentIteration;
+                        // Get iterations from default team or first team
+                        const defaultTeam = teams.value[0]; // Use first team as default
+                        if (defaultTeam) {
+                            const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?api-version=7.0`, {
+                                headers: { 'Authorization': authHeader }
+                            });
+                            
+                            if (iterationsResponse.ok) {
+                                const iterations = await iterationsResponse.json();
+                                this.config.iterations.available = iterations.value.map(iter => ({
+                                    id: iter.id,
+                                    name: iter.name,
+                                    path: iter.path,
+                                    startDate: iter.attributes?.startDate,
+                                    finishDate: iter.attributes?.finishDate,
+                                    url: iter.url
+                                }));
+                                
+                                // Auto-select current iteration
+                                const now = new Date();
+                                const currentIteration = this.config.iterations.available.find(iter => {
+                                    if (iter.startDate && iter.finishDate) {
+                                        const start = new Date(iter.startDate);
+                                        const end = new Date(iter.finishDate);
+                                        return now >= start && now <= end;
+                                    }
+                                    return false;
+                                });
+                                
+                                if (currentIteration) {
+                                    this.config.iterations.selected = currentIteration;
+                                }
+                                
+                                this.renderAvailableIterations();
+                                console.log(`✅ Loaded ${this.config.iterations.available.length} iterations`);
+                            }
                         }
-                        
-                        this.renderAvailableIterations();
-                        console.log(`✅ Loaded ${this.config.iterations.available.length} iterations`);
                     }
                 } catch (error) {
                     console.error('Failed to load iterations:', error);
