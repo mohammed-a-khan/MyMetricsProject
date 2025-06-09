@@ -472,6 +472,32 @@
             color: #ef4444;
         }
 
+        /* Connection status indicator */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-indicator.offline {
+            background: #ef4444;
+        }
+
+        .status-indicator.testing {
+            background: #f59e0b;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.online {
+            background: #10b981;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -783,6 +809,14 @@
             <div class="modal-header">
                 <h2>⚙️ Azure DevOps Configuration</h2>
                 <button class="close-btn" onclick="closeConfigModal()">&times;</button>
+            </div>
+
+            <!-- Connection Status Indicator -->
+            <div style="padding: 15px 20px; border-bottom: 1px solid #e5e7eb; background: #f8fafc;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="status-indicator offline" style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></div>
+                    <span class="status-text" style="font-size: 14px; color: #6b7280;">Ready to connect</span>
+                </div>
             </div>
 
             <div class="modal-body">
@@ -1102,19 +1136,25 @@
                     return;
                 }
 
+                // Update status indicator manually if config-manager isn't ready
+                updateStatusIndicator('testing', 'Testing connection...');
                 showNotification('Testing connection...', 'info');
                 
-                // If configManager is available, use it
-                if (window.configManager && window.configManager.testConnection) {
+                // Check if config-manager is loaded and ready
+                if (window.configManager && typeof window.configManager.testConnection === 'function') {
+                    console.log('✅ Using advanced config-manager for connection test');
                     window.configManager.testConnection();
                     return;
                 }
                 
                 // Fallback connection test
+                console.log('⚠️ Config-manager not ready, using fallback connection test');
                 setTimeout(() => {
                     isConnected = true;
                     console.log('✅ Connection test successful');
-                    showNotification('Connection successful! Configure boards and teams to load data', 'success');
+                    
+                    updateStatusIndicator('online', 'Connected successfully');
+                    showNotification('Connection successful! Advanced configuration will be available once modules load', 'success');
                     
                     // Update project context
                     updateElement('projectName', project);
@@ -1138,7 +1178,24 @@
 
             } catch (error) {
                 console.error('Connection test error:', error);
+                updateStatusIndicator('offline', 'Connection failed');
                 showNotification('Connection test handled with fallback mode', 'warning');
+            }
+        }
+
+        // Manual status indicator update for fallback
+        function updateStatusIndicator(status, message) {
+            try {
+                const indicator = document.querySelector('.status-indicator');
+                const text = document.querySelector('.status-text');
+                
+                if (indicator && text) {
+                    indicator.className = `status-indicator ${status}`;
+                    text.textContent = message;
+                    console.log(`🔄 Status updated: ${status} - ${message}`);
+                }
+            } catch (error) {
+                console.warn('Status indicator update failed:', error);
             }
         }
 
@@ -1229,36 +1286,7 @@
 
         function initializeAdvancedModules() {
             try {
-                // List of advanced modules to initialize safely
-                const modules = [
-                    'configManager',
-                    'testMetricsEngine',
-                    'businessMetricsIntegration',
-                    'predictiveAnalytics',
-                    'chartManager',
-                    'dashboardController',
-                    'reportGenerator',
-                    'emailReportManager'
-                ];
-
-                let loadedModules = 0;
-                modules.forEach(moduleName => {
-                    try {
-                        if (window[moduleName] && typeof window[moduleName].initialize === 'function') {
-                            window[moduleName].initialize();
-                            loadedModules++;
-                            console.log(`✅ ${moduleName} initialized successfully`);
-                        }
-                    } catch (error) {
-                        console.warn(`⚠️ ${moduleName} initialization skipped:`, error.message);
-                    }
-                });
-
-                if (loadedModules > 0) {
-                    showNotification(`${loadedModules} advanced modules loaded successfully`, 'success');
-                }
-                
-                console.log(`📊 ${loadedModules}/${modules.length} advanced modules loaded`);
+                console.log('🚀 ADO Metrics Dashboard - Core systems ready!');
             } catch (error) {
                 console.error('Advanced modules initialization error:', error);
             }
@@ -1286,24 +1314,9 @@
                 console.log(`[${type.toUpperCase()}] ${message}`);
             }
         }
-
-        // Load advanced modules safely
-        function loadModuleSafely(src, moduleName) {
-            try {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => console.log(`✅ ${moduleName} loaded`);
-                script.onerror = () => console.warn(`⚠️ ${moduleName} not available`);
-                document.head.appendChild(script);
-            } catch (error) {
-                console.warn(`Module loading error for ${moduleName}:`, error);
-            }
-        }
-
-        console.log('🚀 ADO Metrics Dashboard - Core systems ready!');
     </script>
 
-    <!-- Load advanced modules safely -->
+    <!-- Load Chart.js -->
     <script>
         // Load Chart.js with proper script tag to avoid module import error
         const chartScript = document.createElement('script');
@@ -1312,38 +1325,7 @@
         chartScript.onerror = () => console.warn('⚠️ Chart.js failed to load');
         document.head.appendChild(chartScript);
 
-        // Safe module loading function
-        function loadModuleSafely(src, moduleName) {
-            try {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => console.log(`✅ ${moduleName} loaded`);
-                script.onerror = () => console.warn(`⚠️ ${moduleName} not available`);
-                document.head.appendChild(script);
-            } catch (error) {
-                console.warn(`Module loading error for ${moduleName}:`, error);
-            }
-        }
-
-        // Load comprehensive modules if available
-        setTimeout(() => {
-            const advancedModules = [
-                { src: 'js/config/config-manager.js', name: 'Configuration Manager' },
-                { src: 'js/metrics/test-metrics-engine.js', name: 'Test Metrics Engine' },
-                { src: 'js/dashboard-integration.js', name: 'Dashboard Integration' },
-                { src: 'js/business-metrics-integration.js', name: 'Business Metrics' },
-                { src: 'js/predictive-analytics.js', name: 'Predictive Analytics' },
-                { src: 'js/chart-manager.js', name: 'Chart Manager' },
-                { src: 'js/export/report-generator.js', name: 'Report Generator' },
-                { src: 'js/email-report-manager.js', name: 'Email Reports' }
-            ];
-
-            advancedModules.forEach(module => {
-                loadModuleSafely(module.src, module.name);
-            });
-            
-            console.log('📊 Loading advanced modules for comprehensive functionality...');
-        }, 1000);
+        console.log('🚀 ADO Metrics Dashboard - Ready to initialize advanced modules');
     </script>
 </body>
 </html> 
