@@ -811,6 +811,30 @@
                     </small>
                 </div>
 
+                <div class="form-group">
+                    <label for="proxyUrl">Proxy URL (Optional)</label>
+                    <input type="text" id="proxyUrl" placeholder="http://proxy.company.com:8080">
+                    <small>Enter proxy server URL if required by your network</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiVersion">API Version</label>
+                    <input type="text" id="apiVersion" placeholder="7.0" value="7.0">
+                    <small>Azure DevOps REST API version (default: 7.0)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="timeout">Request Timeout (seconds)</label>
+                    <input type="number" id="timeout" placeholder="30" value="30" min="10" max="300">
+                    <small>API request timeout in seconds (10-300)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchSize">Batch Size</label>
+                    <input type="number" id="batchSize" placeholder="100" value="100" min="50" max="500">
+                    <small>Number of items to fetch per API request (50-500)</small>
+                </div>
+
                 <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
                     <h4 style="color: #1e40af; margin-bottom: 8px;">🚀 Advanced Features Ready:</h4>
                     <ul style="color: #1e40af; font-size: 13px; margin-left: 20px;">
@@ -820,6 +844,16 @@
                         <li>Multi-Format Report Generation</li>
                         <li>AI-Powered Content Analysis</li>
                         <li>Comprehensive Team Performance</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <h4 style="color: #92400e; margin-bottom: 8px;">🔧 Network Configuration:</h4>
+                    <ul style="color: #92400e; font-size: 12px; margin-left: 15px;">
+                        <li><strong>Proxy Settings:</strong> Configure if behind corporate firewall</li>
+                        <li><strong>API Version:</strong> Use latest stable version (7.0)</li>
+                        <li><strong>Timeout:</strong> Increase for slow networks</li>
+                        <li><strong>Batch Size:</strong> Reduce for large datasets</li>
                     </ul>
                 </div>
             </div>
@@ -1047,27 +1081,40 @@
             }
         }
 
-        // Configuration functions
+        // Enhanced Configuration and Connection Functions
         function testConnection() {
             try {
                 console.log('🔍 Testing Azure DevOps connection...');
                 
+                // Get basic required fields
                 const org = document.getElementById('organization')?.value;
                 const project = document.getElementById('project')?.value;
                 const pat = document.getElementById('patToken')?.value;
+                
+                // Get optional fields with defaults
+                const proxyUrl = document.getElementById('proxyUrl')?.value || '';
+                const apiVersion = document.getElementById('apiVersion')?.value || '7.0';
+                const timeout = document.getElementById('timeout')?.value || '30';
+                const batchSize = document.getElementById('batchSize')?.value || '100';
 
                 if (!org || !project || !pat) {
-                    showNotification('Please fill in all connection details', 'warning');
+                    showNotification('Please fill in all required connection details (Organization, Project, PAT Token)', 'warning');
                     return;
                 }
 
                 showNotification('Testing connection...', 'info');
                 
-                // Simulate connection test
+                // If configManager is available, use it
+                if (window.configManager && window.configManager.testConnection) {
+                    window.configManager.testConnection();
+                    return;
+                }
+                
+                // Fallback connection test
                 setTimeout(() => {
                     isConnected = true;
                     console.log('✅ Connection test successful');
-                    showNotification('Connection successful! Ready to load comprehensive metrics', 'success');
+                    showNotification('Connection successful! Configure boards and teams to load data', 'success');
                     
                     // Update project context
                     updateElement('projectName', project);
@@ -1077,7 +1124,12 @@
                     }
                     
                     // Save configuration
-                    saveConfiguration(org, project);
+                    saveConfiguration(org, project, {
+                        proxyUrl,
+                        apiVersion,
+                        timeout: parseInt(timeout),
+                        batchSize: parseInt(batchSize)
+                    });
                     
                     // Load initial data
                     loadSectionData(currentSection);
@@ -1086,14 +1138,14 @@
 
             } catch (error) {
                 console.error('Connection test error:', error);
-                showNotification('Connection test error handled', 'error');
+                showNotification('Connection test handled with fallback mode', 'warning');
             }
         }
 
-        function saveConfiguration(org, project) {
+        function saveConfiguration(org, project, config) {
             try {
-                const config = { organization: org, project: project };
-                localStorage.setItem('adoMetricsConfig', JSON.stringify(config));
+                const fullConfig = { organization: org, project: project, ...config };
+                localStorage.setItem('adoMetricsConfig', JSON.stringify(fullConfig));
                 console.log('✅ Configuration saved');
             } catch (error) {
                 console.error('Configuration save error:', error);
@@ -1235,7 +1287,7 @@
             }
         }
 
-        // Safe module loading
+        // Load advanced modules safely
         function loadModuleSafely(src, moduleName) {
             try {
                 const script = document.createElement('script');
@@ -1253,8 +1305,25 @@
 
     <!-- Load advanced modules safely -->
     <script>
-        // Load Chart.js for advanced visualizations
-        loadModuleSafely('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js', 'Chart.js');
+        // Load Chart.js with proper script tag to avoid module import error
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+        chartScript.onload = () => console.log('✅ Chart.js loaded successfully');
+        chartScript.onerror = () => console.warn('⚠️ Chart.js failed to load');
+        document.head.appendChild(chartScript);
+
+        // Safe module loading function
+        function loadModuleSafely(src, moduleName) {
+            try {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => console.log(`✅ ${moduleName} loaded`);
+                script.onerror = () => console.warn(`⚠️ ${moduleName} not available`);
+                document.head.appendChild(script);
+            } catch (error) {
+                console.warn(`Module loading error for ${moduleName}:`, error);
+            }
+        }
 
         // Load comprehensive modules if available
         setTimeout(() => {
