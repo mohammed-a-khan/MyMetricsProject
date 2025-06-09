@@ -561,6 +561,58 @@
             color: #1e40af;
         }
 
+        .resource-item, .iteration-item {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .resource-item:hover, .iteration-item:hover {
+            background: #f8fafc;
+        }
+
+        .resource-item.selected, .iteration-item.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .resource-info h5, .iteration-info h5 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .resource-info p, .iteration-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .resource-checkbox, .iteration-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .resource-item.selected .resource-checkbox,
+        .iteration-item.selected .iteration-checkbox {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
         /* Status styles */
         .status-indicator.testing {
             background: #f59e0b !important;
@@ -988,7 +1040,7 @@
 
     <!-- Configuration Modal -->
     <div id="configModal" class="config-modal">
-        <div class="modal-content">
+        <div class="modal-content large">
             <div class="modal-header">
                 <h2>⚙️ Azure DevOps Configuration</h2>
                 <button class="close-btn" onclick="closeConfigModal()">&times;</button>
@@ -1002,85 +1054,208 @@
                 </div>
             </div>
 
+            <!-- Configuration Tabs -->
+            <div class="config-tabs" style="display: flex; border-bottom: 1px solid #e5e7eb; background: #f8fafc;">
+                <button class="tab-btn active" onclick="switchConfigTab('connection')">🔗 Connection</button>
+                <button class="tab-btn" onclick="switchConfigTab('boards')">📋 Boards</button>
+                <button class="tab-btn" onclick="switchConfigTab('resources')">👥 Resources</button>
+                <button class="tab-btn" onclick="switchConfigTab('iterations')">🏃‍♂️ Iterations</button>
+                <button class="tab-btn" onclick="switchConfigTab('preferences')">⚙️ Preferences</button>
+            </div>
+
             <div class="modal-body">
-                <h3 style="margin-bottom: 10px;">Connection Settings</h3>
-                <p style="color: #6b7280; margin-bottom: 20px;">Connect to your Azure DevOps organization to start loading comprehensive metrics</p>
+                <!-- Connection Tab -->
+                <div id="connectionTab" class="config-tab active">
+                    <h3 style="margin-bottom: 10px;">Connection Settings</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Connect to your Azure DevOps organization to start loading comprehensive metrics</p>
 
-                <div class="form-group">
-                    <label for="organization">Organization Name</label>
-                    <input type="text" id="organization" placeholder="your-organization" required>
-                    <small>Enter your Azure DevOps organization name (not the full URL)</small>
+                    <div class="form-group">
+                        <label for="organization">Organization Name</label>
+                        <input type="text" id="organization" placeholder="your-organization" required>
+                        <small>Enter your Azure DevOps organization name (not the full URL)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="project">Project Name</label>
+                        <input type="text" id="project" placeholder="Your Project Name" required>
+                        <small>Enter the exact project name as it appears in Azure DevOps</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patToken">Personal Access Token</label>
+                        <input type="password" id="patToken" placeholder="Enter your PAT token" required>
+                        <small>
+                            <a href="https://dev.azure.com/_usersSettings/tokens" target="_blank" style="color: #94196B; text-decoration: none;">
+                                Create a PAT token
+                            </a> with Work Items (Read), Test Management (Read), and Analytics (Read) permissions
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="proxyUrl">Proxy URL (Optional)</label>
+                        <input type="text" id="proxyUrl" placeholder="http://proxy.company.com:8080">
+                        <small>Enter proxy server URL if required by your network</small>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="project">Project Name</label>
-                    <input type="text" id="project" placeholder="Your Project Name" required>
-                    <small>Enter the exact project name as it appears in Azure DevOps</small>
+                <!-- Boards Tab -->
+                <div id="boardsTab" class="config-tab">
+                    <h3 style="margin-bottom: 10px;">Board Selection</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Select up to 3 boards to analyze (connect first to load available boards)</p>
+
+                    <div class="board-selection">
+                        <div class="available-boards">
+                            <h4>Available Boards</h4>
+                            <div id="availableBoardsList" class="board-list">
+                                <div class="loading-indicator">Connect to Azure DevOps to load boards</div>
+                            </div>
+                        </div>
+                        <div class="selected-boards">
+                            <h4>Selected Boards (0/3)</h4>
+                            <div id="selectedBoardsList" class="board-list">
+                                <div class="empty-state">No boards selected</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="patToken">Personal Access Token</label>
-                    <input type="password" id="patToken" placeholder="Enter your PAT token" required>
-                    <small>
-                        <a href="https://dev.azure.com/_usersSettings/tokens" target="_blank" style="color: #94196B; text-decoration: none;">
-                            Create a PAT token
-                        </a> with Work Items (Read), Test Management (Read), and Analytics (Read) permissions
-                    </small>
+                <!-- Resources Tab -->
+                <div id="resourcesTab" class="config-tab">
+                    <h3 style="margin-bottom: 10px;">Team Member Selection</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Select team members to include in performance metrics</p>
+
+                    <div class="resource-controls">
+                        <input type="text" id="resourceSearch" placeholder="Search team members..." style="width: 100%; margin-bottom: 15px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <div class="resource-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="selectAllResources()">Select All</button>
+                            <button class="btn btn-sm btn-secondary" onclick="clearAllResources()">Clear All</button>
+                        </div>
+                    </div>
+
+                    <div id="resourcesList" class="resource-list">
+                        <div class="loading-indicator">Connect and select boards to load team members</div>
+                    </div>
+
+                    <div class="resource-summary">
+                        <span id="resourceSelectionCount">0 members selected</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="proxyUrl">Proxy URL (Optional)</label>
-                    <input type="text" id="proxyUrl" placeholder="http://proxy.company.com:8080">
-                    <small>Enter proxy server URL if required by your network</small>
+                <!-- Iterations Tab -->
+                <div id="iterationsTab" class="config-tab">
+                    <h3 style="margin-bottom: 10px;">Sprint/Iteration Selection</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Select sprint/iteration for analysis</p>
+
+                    <div class="iteration-selection">
+                        <h4>Available Iterations</h4>
+                        <div id="availableIterationsList" class="iteration-list">
+                            <div class="loading-indicator">Connect and select boards to load iterations</div>
+                        </div>
+                    </div>
+
+                    <div class="date-range-section">
+                        <h4>Date Range Presets</h4>
+                        <div class="preset-buttons">
+                            <button class="preset-btn active" data-range="current">Current Sprint</button>
+                            <button class="preset-btn" data-range="last">Last Sprint</button>
+                            <button class="preset-btn" data-range="last3">Last 3 Sprints</button>
+                            <button class="preset-btn" data-range="custom">Custom Range</button>
+                        </div>
+                        
+                        <div id="customDateRange" style="display: none; margin-top: 15px;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="startDate">Start Date</label>
+                                    <input type="date" id="startDate" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" id="endDate" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="apiVersion">API Version</label>
-                    <input type="text" id="apiVersion" placeholder="7.0" value="7.0">
-                    <small>Azure DevOps REST API version (default: 7.0)</small>
-                </div>
+                <!-- Preferences Tab -->
+                <div id="preferencesTab" class="config-tab">
+                    <h3 style="margin-bottom: 10px;">Display Preferences</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Customize dashboard appearance and behavior</p>
 
-                <div class="form-group">
-                    <label for="timeout">Request Timeout (seconds)</label>
-                    <input type="number" id="timeout" placeholder="30" value="30" min="10" max="300">
-                    <small>API request timeout in seconds (10-300)</small>
-                </div>
+                    <div class="preference-section">
+                        <h4>API Settings</h4>
+                        <div class="form-group">
+                            <label for="apiVersion">API Version</label>
+                            <input type="text" id="apiVersion" placeholder="7.0" value="7.0">
+                            <small>Azure DevOps REST API version (default: 7.0)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeout">Request Timeout (seconds)</label>
+                            <input type="number" id="timeout" placeholder="30" value="30" min="10" max="300">
+                            <small>API request timeout in seconds (10-300)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="batchSize">Batch Size</label>
+                            <input type="number" id="batchSize" placeholder="100" value="100" min="50" max="500">
+                            <small>Number of items to fetch per API request (50-500)</small>
+                        </div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="batchSize">Batch Size</label>
-                    <input type="number" id="batchSize" placeholder="100" value="100" min="50" max="500">
-                    <small>Number of items to fetch per API request (50-500)</small>
-                </div>
+                    <div class="preference-section">
+                        <h4>Dashboard Settings</h4>
+                        <div class="form-group">
+                            <label for="refreshInterval">Auto-refresh Interval (minutes)</label>
+                            <select id="refreshInterval" class="form-control">
+                                <option value="0">Manual only</option>
+                                <option value="5">5 minutes</option>
+                                <option value="15" selected>15 minutes</option>
+                                <option value="30">30 minutes</option>
+                                <option value="60">1 hour</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="enableNotifications" checked> Enable notifications</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="enableAnimations" checked> Enable animations</label>
+                        </div>
+                    </div>
 
-                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                    <h4 style="color: #1e40af; margin-bottom: 8px;">🚀 Advanced Features Ready:</h4>
-                    <ul style="color: #1e40af; font-size: 13px; margin-left: 20px;">
-                        <li>13-Category Test Metrics System</li>
-                        <li>Predictive Analytics & Forecasting</li>
-                        <li>Multi-Format Report Generation</li>
-                        <li>AI-Powered Content Analysis</li>
-                        <li>Comprehensive Team Performance</li>
-                    </ul>
-                </div>
-
-                <div style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                    <h4 style="color: #92400e; margin-bottom: 8px;">🔧 Network Configuration:</h4>
-                    <ul style="color: #92400e; font-size: 12px; margin-left: 15px;">
-                        <li><strong>Proxy Settings:</strong> Configure if behind corporate firewall</li>
-                        <li><strong>API Version:</strong> Use latest stable version (7.0)</li>
-                        <li><strong>Timeout:</strong> Increase for slow networks</li>
-                        <li><strong>Batch Size:</strong> Reduce for large datasets</li>
-                    </ul>
+                    <div class="preference-section">
+                        <h4>Export Settings</h4>
+                        <div class="form-group">
+                            <label for="defaultExportFormat">Default Export Format</label>
+                            <select id="defaultExportFormat" class="form-control">
+                                <option value="excel">Excel (.xlsx)</option>
+                                <option value="pdf">PDF</option>
+                                <option value="csv">CSV</option>
+                                <option value="powerpoint">PowerPoint (.pptx)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="includeCharts" checked> Include charts in exports</label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeConfigModal()">
-                    Cancel
-                </button>
-                <button type="button" class="btn btn-primary" onclick="testConnection()">
-                    🔍 Test Connection
-                </button>
+                <div class="footer-left">
+                    <button type="button" class="btn btn-secondary" onclick="resetConfiguration()">
+                        🔄 Reset All
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button type="button" class="btn btn-secondary" onclick="closeConfigModal()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="testConnection()" id="testBtn">
+                        🔍 Test Connection
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="saveConfiguration()" id="saveBtn">
+                        💾 Save & Apply
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1702,6 +1877,527 @@
                 console.log(`[${type.toUpperCase()}] ${message}`);
             }
         }
+
+        // Missing functions implementation
+        function loadSavedConfiguration() {
+            try {
+                const saved = localStorage.getItem('adoConfig');
+                if (saved) {
+                    const config = JSON.parse(saved);
+                    if (config.connection) {
+                        document.getElementById('organization').value = config.connection.org || '';
+                        document.getElementById('project').value = config.connection.project || '';
+                        document.getElementById('patToken').value = config.connection.patToken || '';
+                        document.getElementById('proxyUrl').value = config.connection.proxyUrl || '';
+                        document.getElementById('apiVersion').value = config.connection.apiVersion || '7.0';
+                        document.getElementById('timeout').value = config.connection.timeout || '30';
+                        document.getElementById('batchSize').value = config.connection.batchSize || '100';
+                    }
+                }
+                console.log('✅ Configuration loaded from storage');
+            } catch (error) {
+                console.error('Configuration load error:', error);
+            }
+        }
+
+        // Production-ready Configuration Manager
+        const configManager = {
+            isConnected: false,
+            config: {
+                connection: {},
+                boards: { available: [], selected: [] },
+                resources: { available: [], selected: [] },
+                iterations: { available: [], selected: null }
+            },
+
+            async testConnection() {
+                try {
+                    const org = document.getElementById('organization').value.trim();
+                    const project = document.getElementById('project').value.trim();
+                    const pat = document.getElementById('patToken').value.trim();
+                    const proxy = document.getElementById('proxyUrl').value.trim();
+
+                    if (!org || !project || !pat) {
+                        showNotification('Please fill in Organization, Project, and PAT Token', 'error');
+                        return;
+                    }
+
+                    this.updateConnectionStatus('testing', 'Testing connection...');
+                    
+                    // Test connection with Azure DevOps
+                    const authHeader = 'Basic ' + btoa(':' + pat);
+                    const testUrl = `https://dev.azure.com/${org}/${project}/_apis/projects/${project}?api-version=7.0`;
+                    
+                    const response = await fetch(testUrl, {
+                        headers: {
+                            'Authorization': authHeader,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        this.isConnected = true;
+                        this.config.connection = { org, project, patToken: pat, proxyUrl: proxy };
+                        this.updateConnectionStatus('online', 'Connected successfully');
+                        showNotification('Connection successful! Loading project data...', 'success');
+                        
+                        // Load all project data
+                        await this.loadAllProjectData();
+                        
+                        // Update global connection state
+                        isConnected = true;
+                        
+                        // Refresh metrics
+                        updateMetricsForSection(currentSection);
+                        
+                    } else {
+                        throw new Error(`Connection failed: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Connection test failed:', error);
+                    this.isConnected = false;
+                    isConnected = false;
+                    this.updateConnectionStatus('offline', 'Connection failed');
+                    showNotification(`Connection failed: ${error.message}`, 'error');
+                }
+            },
+
+            async loadAllProjectData() {
+                try {
+                    showNotification('Loading boards, teams, and iterations...', 'info');
+                    
+                    // Load data in parallel
+                    await Promise.all([
+                        this.loadAvailableBoards(),
+                        this.loadAvailableResources(),
+                        this.loadAvailableIterations()
+                    ]);
+                    
+                    showNotification('Project data loaded successfully!', 'success');
+                } catch (error) {
+                    console.error('Failed to load project data:', error);
+                    showNotification('Connected but failed to load some project data', 'warning');
+                }
+            },
+
+            async loadAvailableBoards() {
+                try {
+                    const { org, project, patToken } = this.config.connection;
+                    const authHeader = 'Basic ' + btoa(':' + patToken);
+                    
+                    // Get teams first
+                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
+                        headers: { 'Authorization': authHeader }
+                    });
+                    
+                    if (teamsResponse.ok) {
+                        const teams = await teamsResponse.json();
+                        this.config.boards.available = [];
+                        
+                        // Get boards for each team
+                        for (const team of teams.value) {
+                            try {
+                                const boardsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${team.id}/_apis/work/boards?api-version=7.0`, {
+                                    headers: { 'Authorization': authHeader }
+                                });
+                                
+                                if (boardsResponse.ok) {
+                                    const boards = await boardsResponse.json();
+                                    boards.value.forEach(board => {
+                                        this.config.boards.available.push({
+                                            id: board.id,
+                                            name: `${team.name} - ${board.name}`,
+                                            teamId: team.id,
+                                            teamName: team.name,
+                                            url: board.url
+                                        });
+                                    });
+                                }
+                            } catch (error) {
+                                console.warn(`Failed to load boards for team ${team.name}:`, error);
+                            }
+                        }
+                        
+                        this.renderAvailableBoards();
+                        console.log(`✅ Loaded ${this.config.boards.available.length} boards`);
+                    }
+                } catch (error) {
+                    console.error('Failed to load boards:', error);
+                    showNotification('Failed to load available boards', 'error');
+                }
+            },
+
+            async loadAvailableResources() {
+                try {
+                    const { org, project, patToken } = this.config.connection;
+                    const authHeader = 'Basic ' + btoa(':' + patToken);
+                    
+                    // Get team members
+                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
+                        headers: { 'Authorization': authHeader }
+                    });
+                    
+                    if (teamsResponse.ok) {
+                        const teams = await teamsResponse.json();
+                        this.config.resources.available = [];
+                        
+                        // Get members for each team
+                        for (const team of teams.value) {
+                            try {
+                                const membersResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams/${team.id}/members?api-version=7.0`, {
+                                    headers: { 'Authorization': authHeader }
+                                });
+                                
+                                if (membersResponse.ok) {
+                                    const members = await membersResponse.json();
+                                    members.value.forEach(member => {
+                                        // Avoid duplicates
+                                        if (!this.config.resources.available.find(r => r.id === member.identity.id)) {
+                                            this.config.resources.available.push({
+                                                id: member.identity.id,
+                                                name: member.identity.displayName,
+                                                email: member.identity.uniqueName,
+                                                teamName: team.name
+                                            });
+                                        }
+                                    });
+                                }
+                            } catch (error) {
+                                console.warn(`Failed to load members for team ${team.name}:`, error);
+                            }
+                        }
+                        
+                        this.renderAvailableResources();
+                        console.log(`✅ Loaded ${this.config.resources.available.length} team members`);
+                    }
+                } catch (error) {
+                    console.error('Failed to load resources:', error);
+                    showNotification('Failed to load team members', 'error');
+                }
+            },
+
+            async loadAvailableIterations() {
+                try {
+                    const { org, project, patToken } = this.config.connection;
+                    const authHeader = 'Basic ' + btoa(':' + patToken);
+                    
+                    // Get iterations
+                    const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/work/teamsettings/iterations?api-version=7.0`, {
+                        headers: { 'Authorization': authHeader }
+                    });
+                    
+                    if (iterationsResponse.ok) {
+                        const iterations = await iterationsResponse.json();
+                        this.config.iterations.available = iterations.value.map(iter => ({
+                            id: iter.id,
+                            name: iter.name,
+                            path: iter.path,
+                            startDate: iter.attributes.startDate,
+                            finishDate: iter.attributes.finishDate,
+                            url: iter.url
+                        }));
+                        
+                        // Auto-select current iteration
+                        const now = new Date();
+                        const currentIteration = this.config.iterations.available.find(iter => {
+                            const start = new Date(iter.startDate);
+                            const end = new Date(iter.finishDate);
+                            return now >= start && now <= end;
+                        });
+                        
+                        if (currentIteration) {
+                            this.config.iterations.selected = currentIteration;
+                        }
+                        
+                        this.renderAvailableIterations();
+                        console.log(`✅ Loaded ${this.config.iterations.available.length} iterations`);
+                    }
+                } catch (error) {
+                    console.error('Failed to load iterations:', error);
+                    showNotification('Failed to load iterations', 'error');
+                }
+            },
+
+            renderAvailableBoards() {
+                const container = document.getElementById('availableBoardsList');
+                const selectedContainer = document.getElementById('selectedBoardsList');
+                
+                if (!container || !selectedContainer) return;
+                
+                if (this.config.boards.available.length === 0) {
+                    container.innerHTML = '<div class="loading-indicator">No boards found</div>';
+                    return;
+                }
+
+                // Render available boards
+                container.innerHTML = this.config.boards.available
+                    .filter(board => !this.config.boards.selected.find(s => s.id === board.id))
+                    .map(board => `
+                        <div class="board-item" onclick="configManager.selectBoard('${board.id}')">
+                            <div class="board-info">
+                                <h5>${board.name}</h5>
+                                <p>${board.teamName}</p>
+                            </div>
+                            <div class="board-actions">+</div>
+                        </div>
+                    `).join('');
+
+                // Render selected boards
+                if (this.config.boards.selected.length === 0) {
+                    selectedContainer.innerHTML = '<div class="empty-state">No boards selected</div>';
+                } else {
+                    selectedContainer.innerHTML = this.config.boards.selected
+                        .map(board => `
+                            <div class="board-item selected" onclick="configManager.unselectBoard('${board.id}')">
+                                <div class="board-info">
+                                    <h5>${board.name}</h5>
+                                    <p>${board.teamName}</p>
+                                </div>
+                                <div class="board-actions">✓</div>
+                            </div>
+                        `).join('');
+                }
+
+                // Update count
+                const countElement = document.querySelector('.selected-boards h4');
+                if (countElement) {
+                    countElement.textContent = `Selected Boards (${this.config.boards.selected.length}/3)`;
+                }
+            },
+
+            renderAvailableResources() {
+                const container = document.getElementById('resourcesList');
+                if (!container) return;
+                
+                if (this.config.resources.available.length === 0) {
+                    container.innerHTML = '<div class="loading-indicator">No team members found</div>';
+                    return;
+                }
+
+                container.innerHTML = this.config.resources.available
+                    .map(resource => {
+                        const isSelected = this.config.resources.selected.includes(resource.id);
+                        return `
+                            <div class="resource-item ${isSelected ? 'selected' : ''}" onclick="configManager.toggleResource('${resource.id}')">
+                                <div class="resource-info">
+                                    <h5>${resource.name}</h5>
+                                    <p>${resource.email} • ${resource.teamName}</p>
+                                </div>
+                                <div class="resource-checkbox">${isSelected ? '✓' : ''}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                this.updateResourceSelectionCount();
+            },
+
+            renderAvailableIterations() {
+                const container = document.getElementById('availableIterationsList');
+                if (!container) return;
+                
+                if (this.config.iterations.available.length === 0) {
+                    container.innerHTML = '<div class="loading-indicator">No iterations found</div>';
+                    return;
+                }
+
+                container.innerHTML = this.config.iterations.available
+                    .map(iteration => {
+                        const isSelected = this.config.iterations.selected?.id === iteration.id;
+                        const startDate = new Date(iteration.startDate).toLocaleDateString();
+                        const endDate = new Date(iteration.finishDate).toLocaleDateString();
+                        
+                        return `
+                            <div class="iteration-item ${isSelected ? 'selected' : ''}" onclick="configManager.selectIteration('${iteration.id}')">
+                                <div class="iteration-info">
+                                    <h5>${iteration.name}</h5>
+                                    <p>${startDate} - ${endDate}</p>
+                                </div>
+                                <div class="iteration-checkbox">${isSelected ? '✓' : ''}</div>
+                            </div>
+                        `;
+                    }).join('');
+            },
+
+            selectBoard(boardId) {
+                if (this.config.boards.selected.length >= 3) {
+                    showNotification('Maximum 3 boards can be selected', 'warning');
+                    return;
+                }
+
+                const board = this.config.boards.available.find(b => b.id === boardId);
+                if (board && !this.config.boards.selected.find(s => s.id === boardId)) {
+                    this.config.boards.selected.push(board);
+                    this.renderAvailableBoards();
+                    this.saveConfiguration();
+                }
+            },
+
+            unselectBoard(boardId) {
+                this.config.boards.selected = this.config.boards.selected.filter(b => b.id !== boardId);
+                this.renderAvailableBoards();
+                this.saveConfiguration();
+            },
+
+            toggleResource(resourceId) {
+                const index = this.config.resources.selected.indexOf(resourceId);
+                if (index === -1) {
+                    this.config.resources.selected.push(resourceId);
+                } else {
+                    this.config.resources.selected.splice(index, 1);
+                }
+                this.renderAvailableResources();
+                this.saveConfiguration();
+            },
+
+            selectIteration(iterationId) {
+                this.config.iterations.selected = this.config.iterations.available.find(i => i.id === iterationId);
+                this.renderAvailableIterations();
+                this.saveConfiguration();
+            },
+
+            selectAllResources() {
+                this.config.resources.selected = this.config.resources.available.map(r => r.id);
+                this.renderAvailableResources();
+                this.saveConfiguration();
+            },
+
+            clearAllResources() {
+                this.config.resources.selected = [];
+                this.renderAvailableResources();
+                this.saveConfiguration();
+            },
+
+            updateResourceSelectionCount() {
+                const countElement = document.getElementById('resourceSelectionCount');
+                if (countElement) {
+                    countElement.textContent = `${this.config.resources.selected.length} members selected`;
+                }
+            },
+
+            switchConfigTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.config-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Hide all tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show selected tab
+                const targetTab = document.getElementById(`${tabName}Tab`);
+                const targetBtn = document.querySelector(`[onclick="switchConfigTab('${tabName}')"]`);
+                
+                if (targetTab) targetTab.classList.add('active');
+                if (targetBtn) targetBtn.classList.add('active');
+                
+                // Load tab-specific data if connected
+                if (this.isConnected) {
+                    switch(tabName) {
+                        case 'boards':
+                            if (this.config.boards.available.length === 0) {
+                                this.loadAvailableBoards();
+                            }
+                            break;
+                        case 'resources':
+                            if (this.config.resources.available.length === 0) {
+                                this.loadAvailableResources();
+                            }
+                            break;
+                        case 'iterations':
+                            if (this.config.iterations.available.length === 0) {
+                                this.loadAvailableIterations();
+                            }
+                            break;
+                    }
+                }
+            },
+
+            updateConnectionStatus(status, message) {
+                const indicator = document.querySelector('.status-indicator');
+                const text = document.querySelector('.status-text');
+                
+                if (indicator) {
+                    indicator.className = `status-indicator ${status}`;
+                }
+                
+                if (text) {
+                    text.textContent = message;
+                }
+            },
+
+            saveConfiguration() {
+                try {
+                    // Save connection details
+                    const org = document.getElementById('organization').value.trim();
+                    const project = document.getElementById('project').value.trim();
+                    const pat = document.getElementById('patToken').value.trim();
+                    const proxy = document.getElementById('proxyUrl').value.trim();
+                    const apiVersion = document.getElementById('apiVersion').value.trim();
+                    const timeout = document.getElementById('timeout').value.trim();
+                    const batchSize = document.getElementById('batchSize').value.trim();
+                    
+                    this.config.connection = {
+                        org, project, patToken: pat, proxyUrl: proxy,
+                        apiVersion, timeout, batchSize
+                    };
+                    
+                    localStorage.setItem('adoConfig', JSON.stringify(this.config));
+                    console.log('✅ Configuration saved');
+                } catch (error) {
+                    console.error('Configuration save error:', error);
+                }
+            },
+
+            resetConfiguration() {
+                this.config = {
+                    connection: {},
+                    boards: { available: [], selected: [] },
+                    resources: { available: [], selected: [] },
+                    iterations: { available: [], selected: null }
+                };
+                this.isConnected = false;
+                isConnected = false;
+                
+                localStorage.removeItem('adoConfig');
+                
+                // Clear form fields
+                document.getElementById('organization').value = '';
+                document.getElementById('project').value = '';
+                document.getElementById('patToken').value = '';
+                document.getElementById('proxyUrl').value = '';
+                
+                this.updateConnectionStatus('offline', 'Ready to connect');
+                
+                // Clear all displays
+                this.renderAvailableBoards();
+                this.renderAvailableResources();
+                this.renderAvailableIterations();
+            },
+
+            getConfiguration() {
+                return this.config;
+            },
+
+            isConfigured() {
+                return this.isConnected && 
+                       this.config.boards.selected.length > 0 && 
+                       this.config.iterations.selected !== null;
+            },
+
+            getSelectedBoards() {
+                return this.config.boards.selected;
+            },
+
+            getSelectedResources() {
+                return this.config.resources.selected;
+            },
+
+            getSelectedIteration() {
+                return this.config.iterations.selected;
+            }
+        };
     </script>
 
     <!-- Load Chart.js -->
