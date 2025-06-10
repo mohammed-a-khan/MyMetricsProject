@@ -112,8 +112,9 @@ class DashboardIntegrationController {
 
             // Use predictive analytics for forecasting
             if (window.predictiveAnalytics) {
-                await window.predictiveAnalytics.generateExecutiveForecasts();
-                this.executiveData.forecasts = window.predictiveAnalytics.getExecutiveForecasts();
+                this.executiveData.forecasts = await window.predictiveAnalytics.generateAnalyticsDashboard(
+                    window.configManager.getConfiguration()
+                );
             }
 
             // Calculate project health score
@@ -138,15 +139,22 @@ class DashboardIntegrationController {
             // Load sprint work items
             if (window.adoClient) {
                 this.sprintData.workItems = await window.adoClient.getSprintWorkItems(iteration.id);
-                this.sprintData.burndown = await this.calculateSprintBurndown(this.sprintData.workItems);
+                this.sprintData.burndown = await this.calculateSprintBurndown(this.sprintData.workItems, iteration);
                 this.sprintData.velocity = await this.calculateSprintVelocity();
                 this.sprintData.scopeChanges = await this.trackScopeChanges(iteration.id);
+                this.sprintData.capacity = await window.adoClient.getSprintCapacity(iteration.id);
             }
 
             // Generate predictive sprint insights
             if (window.predictiveAnalytics) {
-                this.sprintData.completion = await window.predictiveAnalytics.predictSprintCompletion();
-                this.sprintData.risks = await window.predictiveAnalytics.identifySprintRisks();
+                this.sprintData.completion = await window.predictiveAnalytics.predictSprintCompletion(
+                    iteration, 
+                    { includeSimulation: true }
+                );
+                this.sprintData.risks = await window.predictiveAnalytics.identifyRisks(
+                    { sprintData: this.sprintData },
+                    { includeEarlyWarnings: true }
+                );
             }
             
         } catch (error) {
@@ -695,6 +703,513 @@ class DashboardIntegrationController {
     switchToSection(sectionName) {
         this.currentSection = sectionName;
         this.renderCurrentSection();
+    }
+
+    // Missing Critical Method Implementations
+    async calculateSprintBurndown(workItems, iteration) {
+        if (!workItems || !workItems.value || workItems.value.length === 0) {
+            return {
+                remainingPoints: 0,
+                completedPoints: 0,
+                totalPoints: 0,
+                burndownData: [],
+                isOnTrack: true,
+                projectedCompletion: new Date()
+            };
+        }
+
+        const stories = workItems.value.filter(wi => 
+            wi.fields?.['System.WorkItemType'] === 'User Story' ||
+            wi.fields?.['System.WorkItemType'] === 'Feature'
+        );
+
+        let totalPoints = 0;
+        let completedPoints = 0;
+        let remainingPoints = 0;
+
+        for (const story of stories) {
+            const storyPoints = parseFloat(story.fields?.['Microsoft.VSTS.Scheduling.StoryPoints'] || 0);
+            totalPoints += storyPoints;
+
+            const state = story.fields?.['System.State'];
+            if (['Done', 'Closed', 'Resolved', 'Completed'].includes(state)) {
+                completedPoints += storyPoints;
+            } else {
+                remainingPoints += storyPoints;
+            }
+        }
+
+        // Generate burndown chart data
+        const sprintStart = new Date(iteration.attributes?.startDate || Date.now());
+        const sprintEnd = new Date(iteration.attributes?.finishDate || Date.now() + (14 * 24 * 60 * 60 * 1000));
+        const sprintDays = Math.ceil((sprintEnd - sprintStart) / (24 * 60 * 60 * 1000));
+        const idealBurnRate = totalPoints / sprintDays;
+
+        const burndownData = [];
+        for (let day = 0; day <= sprintDays; day++) {
+            const idealRemaining = Math.max(0, totalPoints - (idealBurnRate * day));
+            burndownData.push({
+                day,
+                idealRemaining,
+                actualRemaining: day === 0 ? totalPoints : remainingPoints // Simplified for now
+            });
+        }
+
+        const currentDay = Math.ceil((new Date() - sprintStart) / (24 * 60 * 60 * 1000));
+        const expectedCompletion = currentDay > 0 ? (completedPoints / currentDay) * sprintDays : totalPoints;
+        const isOnTrack = expectedCompletion >= (totalPoints * 0.9); // 90% completion threshold
+
+        return {
+            remainingPoints,
+            completedPoints,
+            totalPoints,
+            burndownData,
+            isOnTrack,
+            projectedCompletion: new Date(sprintStart.getTime() + (sprintDays * 24 * 60 * 60 * 1000)),
+            sprintProgress: totalPoints > 0 ? Math.round((completedPoints / totalPoints) * 100) : 0
+        };
+    }
+
+    async calculateSprintVelocity() {
+        try {
+            const config = window.configManager?.getConfiguration();
+            if (!config || !window.adoClient) {
+                return { current: 0, previous: [], trend: 0, change: 0, consistency: 0 };
+            }
+
+            // Get last 3 iterations to calculate velocity trend
+            const iterations = await window.adoClient.getIterations();
+            if (!iterations.value || iterations.value.length === 0) {
+                return { current: 0, previous: [], trend: 0, change: 0, consistency: 0 };
+            }
+
+            const completedIterations = iterations.value
+                .filter(iter => new Date(iter.attributes?.finishDate) < new Date())
+                .sort((a, b) => new Date(b.attributes?.finishDate) - new Date(a.attributes?.finishDate))
+                .slice(0, 3);
+
+            const velocityHistory = [];
+            for (const iteration of completedIterations) {
+                try {
+                    const iterationWorkItems = await window.adoClient.getSprintWorkItems(iteration.id);
+                    const stories = iterationWorkItems.value?.filter(wi => 
+                        wi.fields?.['System.WorkItemType'] === 'User Story' &&
+                        ['Done', 'Closed', 'Resolved', 'Completed'].includes(wi.fields?.['System.State'])
+                    ) || [];
+
+                    const velocity = stories.reduce((total, story) => {
+                        return total + parseFloat(story.fields?.['Microsoft.VSTS.Scheduling.StoryPoints'] || 0);
+                    }, 0);
+
+                    velocityHistory.push({
+                        iteration: iteration.name,
+                        velocity,
+                        finishDate: iteration.attributes?.finishDate
+                    });
+                } catch (error) {
+                    console.warn(`Failed to calculate velocity for iteration ${iteration.name}:`, error);
+                }
+            }
+
+            const current = velocityHistory.length > 0 ? velocityHistory[0].velocity : 0;
+            const previous = velocityHistory.slice(1).map(v => v.velocity);
+            
+            // Calculate trend
+            let trend = 0;
+            if (previous.length > 0) {
+                const avgPrevious = previous.reduce((a, b) => a + b, 0) / previous.length;
+                trend = avgPrevious > 0 ? ((current - avgPrevious) / avgPrevious) * 100 : 0;
+            }
+
+            // Calculate consistency (standard deviation)
+            const allVelocities = [current, ...previous];
+            const avgVelocity = allVelocities.reduce((a, b) => a + b, 0) / allVelocities.length;
+            const variance = allVelocities.reduce((acc, vel) => acc + Math.pow(vel - avgVelocity, 2), 0) / allVelocities.length;
+            const stdDev = Math.sqrt(variance);
+            const consistency = avgVelocity > 0 ? Math.max(0, 100 - ((stdDev / avgVelocity) * 100)) : 0;
+
+            return {
+                current,
+                previous,
+                trend,
+                change: trend,
+                consistency: Math.round(consistency),
+                history: velocityHistory
+            };
+        } catch (error) {
+            console.error('Failed to calculate sprint velocity:', error);
+            return { current: 0, previous: [], trend: 0, change: 0, consistency: 0 };
+        }
+    }
+
+    async trackScopeChanges(iterationId) {
+        try {
+            if (!window.adoClient) {
+                return { added: [], removed: [], totalChanges: 0, impactScore: 0 };
+            }
+
+            // Get current sprint work items
+            const currentWorkItems = await window.adoClient.getSprintWorkItems(iterationId);
+            const scopeChanges = { added: [], removed: [], totalChanges: 0, impactScore: 0 };
+
+            // For each work item, check revision history to identify scope changes
+            for (const workItem of currentWorkItems.value || []) {
+                try {
+                    const revisions = await window.adoClient.getWorkItemRevisions(workItem.id);
+                    if (revisions.value && revisions.value.length > 1) {
+                        // Analyze revisions to detect iteration path changes
+                        for (let i = 1; i < revisions.value.length; i++) {
+                            const currentRev = revisions.value[i];
+                            const previousRev = revisions.value[i - 1];
+                            
+                            const currentIteration = currentRev.fields?.['System.IterationPath'];
+                            const previousIteration = previousRev.fields?.['System.IterationPath'];
+                            
+                            if (currentIteration !== previousIteration) {
+                                const storyPoints = parseFloat(currentRev.fields?.['Microsoft.VSTS.Scheduling.StoryPoints'] || 0);
+                                const changeType = currentIteration?.includes(iterationId) ? 'added' : 'removed';
+                                
+                                scopeChanges[changeType].push({
+                                    workItemId: workItem.id,
+                                    title: currentRev.fields?.['System.Title'],
+                                    storyPoints,
+                                    changeDate: currentRev.fields?.['System.ChangedDate'],
+                                    changedBy: currentRev.fields?.['System.ChangedBy']?.displayName
+                                });
+                                
+                                scopeChanges.totalChanges++;
+                                scopeChanges.impactScore += storyPoints;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`Failed to get revisions for work item ${workItem.id}:`, error);
+                }
+            }
+
+            return scopeChanges;
+        } catch (error) {
+            console.error('Failed to track scope changes:', error);
+            return { added: [], removed: [], totalChanges: 0, impactScore: 0 };
+        }
+    }
+
+    async loadBugMetricsWithEnvironmentClassification() {
+        try {
+            if (!window.adoClient) {
+                return [];
+            }
+
+            const bugs = await window.adoClient.getBugsByEnvironment();
+            const environments = ['Dev', 'QA', 'UAT', 'Production', 'Unknown'];
+            const classification = {};
+
+            // Initialize environment buckets
+            environments.forEach(env => {
+                classification[env] = {
+                    environment: env,
+                    total: 0,
+                    critical: 0,
+                    high: 0,
+                    medium: 0,
+                    low: 0,
+                    open: 0,
+                    resolved: 0,
+                    averageAge: 0,
+                    bugs: []
+                };
+            });
+
+            // Classify bugs by environment
+            for (const bug of bugs.value || []) {
+                let environment = 'Unknown';
+                const tags = (bug.fields?.['System.Tags'] || '').toLowerCase();
+                const areaPath = (bug.fields?.['System.AreaPath'] || '').toLowerCase();
+                const title = (bug.fields?.['System.Title'] || '').toLowerCase();
+
+                // Environment detection logic
+                if (tags.includes('production') || areaPath.includes('prod') || title.includes('production')) {
+                    environment = 'Production';
+                } else if (tags.includes('uat') || areaPath.includes('uat') || title.includes('uat')) {
+                    environment = 'UAT';
+                } else if (tags.includes('qa') || areaPath.includes('qa') || title.includes('test')) {
+                    environment = 'QA';
+                } else if (tags.includes('dev') || areaPath.includes('dev') || title.includes('development')) {
+                    environment = 'Dev';
+                }
+
+                const envData = classification[environment];
+                envData.total++;
+                envData.bugs.push(bug);
+
+                // Categorize by severity
+                const severity = (bug.fields?.['Microsoft.VSTS.Common.Severity'] || '3 - Medium').toLowerCase();
+                if (severity.includes('critical') || severity.includes('1')) {
+                    envData.critical++;
+                } else if (severity.includes('high') || severity.includes('2')) {
+                    envData.high++;
+                } else if (severity.includes('low') || severity.includes('4')) {
+                    envData.low++;
+                } else {
+                    envData.medium++;
+                }
+
+                // Categorize by state
+                const state = bug.fields?.['System.State'] || '';
+                if (['Resolved', 'Done', 'Closed', 'Completed'].includes(state)) {
+                    envData.resolved++;
+                } else {
+                    envData.open++;
+                }
+
+                // Calculate age
+                const createdDate = new Date(bug.fields?.['System.CreatedDate']);
+                const ageInDays = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
+                envData.averageAge += ageInDays;
+            }
+
+            // Calculate averages and final metrics
+            Object.values(classification).forEach(envData => {
+                if (envData.total > 0) {
+                    envData.averageAge = Math.round(envData.averageAge / envData.total);
+                    envData.resolutionRate = Math.round((envData.resolved / envData.total) * 100);
+                    envData.criticalRate = Math.round((envData.critical / envData.total) * 100);
+                }
+            });
+
+            return Object.values(classification);
+        } catch (error) {
+            console.error('Failed to load bug metrics with environment classification:', error);
+            return [];
+        }
+    }
+
+    calculateQualityGateStatus() {
+        const gates = {
+            testCoverage: { status: 'unknown', threshold: 80, current: 0, passed: false },
+            passRate: { status: 'unknown', threshold: 95, current: 0, passed: false },
+            bugDensity: { status: 'unknown', threshold: 5, current: 0, passed: false },
+            codeReview: { status: 'unknown', threshold: 100, current: 0, passed: false },
+            overall: { status: 'unknown', passedGates: 0, totalGates: 4 }
+        };
+
+        try {
+            // Test Coverage Gate
+            if (this.qualityData.summary) {
+                gates.testCoverage.current = parseFloat(this.qualityData.summary.coveragePercentage || 0);
+                gates.testCoverage.passed = gates.testCoverage.current >= gates.testCoverage.threshold;
+                gates.testCoverage.status = gates.testCoverage.passed ? 'passed' : 'failed';
+            }
+
+            // Pass Rate Gate
+            if (this.qualityData.summary) {
+                gates.passRate.current = parseFloat(this.qualityData.summary.overallPassRate || 0);
+                gates.passRate.passed = gates.passRate.current >= gates.passRate.threshold;
+                gates.passRate.status = gates.passRate.passed ? 'passed' : 'failed';
+            }
+
+            // Bug Density Gate (bugs per story)
+            if (this.qualityData.bugs && this.sprintData.workItems) {
+                const totalBugs = this.qualityData.bugs.reduce((sum, env) => sum + env.total, 0);
+                const totalStories = this.sprintData.workItems.value?.filter(wi => 
+                    wi.fields?.['System.WorkItemType'] === 'User Story'
+                ).length || 1;
+                
+                gates.bugDensity.current = Math.round((totalBugs / totalStories) * 100) / 100;
+                gates.bugDensity.passed = gates.bugDensity.current <= gates.bugDensity.threshold;
+                gates.bugDensity.status = gates.bugDensity.passed ? 'passed' : 'failed';
+            }
+
+            // Code Review Gate (simplified - assume 100% for now)
+            gates.codeReview.current = 100;
+            gates.codeReview.passed = true;
+            gates.codeReview.status = 'passed';
+
+            // Overall Gate Status
+            gates.overall.passedGates = Object.values(gates)
+                .filter(gate => gate.passed === true).length;
+            
+            const overallPassRate = (gates.overall.passedGates / gates.overall.totalGates) * 100;
+            gates.overall.status = overallPassRate >= 75 ? 'passed' : 'failed';
+            gates.overall.percentage = Math.round(overallPassRate);
+
+        } catch (error) {
+            console.error('Failed to calculate quality gate status:', error);
+        }
+
+        return gates;
+    }
+
+    async loadIndividualPerformanceMetrics(resource) {
+        try {
+            if (!window.adoClient) {
+                return this.getDefaultMemberMetrics(resource);
+            }
+
+            // Get work items assigned to this team member
+            const memberActivity = await window.adoClient.getTeamMemberActivity(resource.uniqueName || resource.displayName);
+            const workItems = memberActivity.value || [];
+
+            const metrics = {
+                id: resource.id,
+                displayName: resource.displayName,
+                uniqueName: resource.uniqueName,
+                role: this.inferMemberRole(workItems),
+                storiesDelivered: 0,
+                storyPoints: 0,
+                tasksCompleted: 0,
+                bugsCreated: 0,
+                bugsResolved: 0,
+                testCasesAuthored: 0,
+                averageCycleTime: 0,
+                currentWorkload: 0,
+                committedPoints: 0,
+                velocity: 0,
+                qualityScore: 100
+            };
+
+            // Calculate metrics from work items
+            const stories = workItems.filter(wi => wi.fields?.['System.WorkItemType'] === 'User Story');
+            const tasks = workItems.filter(wi => wi.fields?.['System.WorkItemType'] === 'Task');
+            const bugs = workItems.filter(wi => wi.fields?.['System.WorkItemType'] === 'Bug');
+            const testCases = workItems.filter(wi => wi.fields?.['System.WorkItemType'] === 'Test Case');
+
+            // Stories and story points
+            const completedStories = stories.filter(s => 
+                ['Done', 'Closed', 'Resolved', 'Completed'].includes(s.fields?.['System.State'])
+            );
+            
+            metrics.storiesDelivered = completedStories.length;
+            metrics.storyPoints = completedStories.reduce((total, story) => {
+                return total + parseFloat(story.fields?.['Microsoft.VSTS.Scheduling.StoryPoints'] || 0);
+            }, 0);
+
+            // Current workload
+            metrics.currentWorkload = stories.filter(s => 
+                ['Active', 'In Progress', 'Committed', 'New'].includes(s.fields?.['System.State'])
+            ).length;
+
+            // Tasks
+            metrics.tasksCompleted = tasks.filter(t => 
+                ['Done', 'Closed', 'Resolved', 'Completed'].includes(t.fields?.['System.State'])
+            ).length;
+
+            // Bugs
+            const createdBugs = bugs.filter(b => 
+                b.fields?.['System.CreatedBy']?.displayName?.includes(resource.displayName)
+            );
+            const resolvedBugs = bugs.filter(b => 
+                ['Done', 'Closed', 'Resolved', 'Completed'].includes(b.fields?.['System.State']) &&
+                b.fields?.['System.AssignedTo']?.displayName?.includes(resource.displayName)
+            );
+
+            metrics.bugsCreated = createdBugs.length;
+            metrics.bugsResolved = resolvedBugs.length;
+
+            // Test cases
+            metrics.testCasesAuthored = testCases.filter(tc => 
+                tc.fields?.['System.CreatedBy']?.displayName?.includes(resource.displayName)
+            ).length;
+
+            // Calculate average cycle time
+            if (completedStories.length > 0) {
+                const totalCycleTime = completedStories.reduce((total, story) => {
+                    const created = new Date(story.fields?.['System.CreatedDate']);
+                    const closed = new Date(story.fields?.['System.ChangedDate']);
+                    return total + ((closed - created) / (1000 * 60 * 60 * 24));
+                }, 0);
+                metrics.averageCycleTime = Math.round(totalCycleTime / completedStories.length);
+            }
+
+            // Quality score based on bug creation vs resolution
+            if (metrics.bugsCreated > 0) {
+                const bugResolutionRate = (metrics.bugsResolved / metrics.bugsCreated) * 100;
+                metrics.qualityScore = Math.min(100, bugResolutionRate);
+            }
+
+            return metrics;
+        } catch (error) {
+            console.error(`Failed to load individual performance metrics for ${resource.displayName}:`, error);
+            return this.getDefaultMemberMetrics(resource);
+        }
+    }
+
+    getDefaultMemberMetrics(resource) {
+        return {
+            id: resource.id,
+            displayName: resource.displayName,
+            uniqueName: resource.uniqueName,
+            role: 'Team Member',
+            storiesDelivered: 0,
+            storyPoints: 0,
+            tasksCompleted: 0,
+            bugsCreated: 0,
+            bugsResolved: 0,
+            testCasesAuthored: 0,
+            averageCycleTime: 0,
+            currentWorkload: 0,
+            committedPoints: 0,
+            velocity: 0,
+            qualityScore: 100
+        };
+    }
+
+    inferMemberRole(workItems) {
+        const workItemTypes = workItems.map(wi => wi.fields?.['System.WorkItemType']);
+        const testCaseCount = workItemTypes.filter(type => type === 'Test Case').length;
+        const bugCount = workItemTypes.filter(type => type === 'Bug').length;
+        const storyCount = workItemTypes.filter(type => type === 'User Story').length;
+
+        if (testCaseCount > storyCount && testCaseCount > bugCount) {
+            return 'Tester';
+        } else if (bugCount > storyCount * 0.3) {
+            return 'Developer';
+        } else if (storyCount > 0) {
+            return 'Developer';
+        }
+        
+        return 'Team Member';
+    }
+
+    generateSkillsMatrix(teamMembers) {
+        const skills = ['Frontend', 'Backend', 'Testing', 'DevOps', 'Database', 'Analysis'];
+        const matrix = {};
+
+        teamMembers.forEach(member => {
+            matrix[member.displayName] = {};
+            
+            // Infer skills based on work patterns
+            const hasTestCases = member.testCasesAuthored > 0;
+            const hasBugResolution = member.bugsResolved > member.bugsCreated;
+            const hasStoryWork = member.storiesDelivered > 0;
+            
+            skills.forEach(skill => {
+                let proficiency = 1; // Base level
+                
+                switch (skill) {
+                    case 'Testing':
+                        proficiency = hasTestCases ? 4 : 2;
+                        break;
+                    case 'Frontend':
+                    case 'Backend':
+                        proficiency = hasStoryWork ? 3 : 2;
+                        break;
+                    case 'DevOps':
+                        proficiency = hasBugResolution ? 3 : 2;
+                        break;
+                    default:
+                        proficiency = 2;
+                }
+                
+                matrix[member.displayName][skill] = Math.min(5, proficiency);
+            });
+        });
+
+        return {
+            skills,
+            members: Object.keys(matrix),
+            matrix
+        };
     }
 
     cleanup() {

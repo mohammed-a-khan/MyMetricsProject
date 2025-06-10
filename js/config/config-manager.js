@@ -130,17 +130,21 @@ class ConfigurationManager {
         this.updateConnectionStatus('testing', 'Testing connection...');
         
         try {
-            // Test basic connection
-            const response = await this.makeADORequest(`/${org}/${project}/_apis/projects/${project}`, {
+            // Test basic connection with correct Azure DevOps API URL
+            const testUrl = `https://dev.azure.com/${org}/_apis/projects/${project}?api-version=6.0`;
+            const response = await fetch(testUrl, {
+                method: 'GET',
                 headers: {
                     'Authorization': `Basic ${btoa(':' + pat)}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             });
 
             if (response.ok) {
+                const projectData = await response.json();
                 this.isConnected = true;
-                this.updateConnectionStatus('online', 'Connected successfully');
+                this.updateConnectionStatus('online', `Connected to ${projectData.name || project}`);
                 
                 // Save connection details
                 this.config.connection = { org, project, patToken: pat, proxyUrl: proxy };
@@ -151,7 +155,8 @@ class ConfigurationManager {
                 
                 this.showNotification('Connection successful! Loading boards and teams...', 'success');
             } else {
-                throw new Error(`Connection failed: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`Connection failed: ${response.status} - ${errorText}`);
             }
         } catch (error) {
             console.error('Connection test failed:', error);
@@ -181,27 +186,56 @@ class ConfigurationManager {
 
         try {
             const { org, project, patToken } = this.config.connection;
-            const response = await this.makeADORequest(`/${org}/${project}/_apis/work/boards`, {
+            
+            // First get the team to access boards
+            const teamResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=6.0`, {
                 headers: {
                     'Authorization': `Basic ${btoa(':' + patToken)}`,
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                this.config.boards.available = data.value.map(board => ({
+            if (!teamResponse.ok) {
+                throw new Error(`Failed to fetch teams: ${teamResponse.status}`);
+            }
+
+            const teamData = await teamResponse.json();
+            const teams = teamData.value || [];
+
+            if (teams.length === 0) {
+                this.showNotification('No teams found in the project', 'warning');
+                return;
+            }
+
+            // Get boards for the first team (or default team)
+            const team = teams[0];
+            const boardResponse = await fetch(`https://dev.azure.com/${org}/${project}/${team.id}/_apis/work/boards?api-version=6.0`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(':' + patToken)}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (boardResponse.ok) {
+                const boardData = await boardResponse.json();
+                this.config.boards.available = boardData.value.map(board => ({
                     id: board.id,
                     name: board.name,
                     url: board.url,
+                    teamId: team.id,
+                    teamName: team.name,
                     columns: board.columns || []
                 }));
 
                 this.renderAvailableBoards();
+                this.showNotification(`Found ${this.config.boards.available.length} boards`, 'success');
+            } else {
+                throw new Error(`Failed to fetch boards: ${boardResponse.status}`);
             }
+
         } catch (error) {
             console.error('Failed to load boards:', error);
-            this.showNotification('Failed to load available boards', 'error');
+            this.showNotification(`Failed to load boards: ${error.message}`, 'error');
         }
     }
 
@@ -276,53 +310,63 @@ class ConfigurationManager {
         try {
             const { org, project, patToken } = this.config.connection;
             
-            // Get all teams first
-            const teamsResponse = await this.makeADORequest(`/${org}/_apis/projects/${project}/teams`, {
+            // Get project teams and members
+            const teamResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=6.0`, {
                 headers: {
                     'Authorization': `Basic ${btoa(':' + patToken)}`,
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (teamsResponse.ok) {
-                const teamsData = await teamsResponse.json();
-                
-                // Get members for each team
-                const allMembers = new Set();
-                for (const team of teamsData.value) {
-                    try {
-                        const membersResponse = await this.makeADORequest(
-                            `/${org}/_apis/projects/${project}/teams/${team.id}/members`, {
-                            headers: {
-                                'Authorization': `Basic ${btoa(':' + patToken)}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-
-                        if (membersResponse.ok) {
-                            const membersData = await membersResponse.json();
-                            membersData.value.forEach(member => {
-                                allMembers.add(JSON.stringify({
-                                    id: member.identity.id,
-                                    displayName: member.identity.displayName,
-                                    uniqueName: member.identity.uniqueName,
-                                    imageUrl: member.identity.imageUrl
-                                }));
-                            });
-                        }
-                    } catch (error) {
-                        console.warn(`Failed to load members for team ${team.name}:`, error);
-                    }
-                }
-
-                // Convert back to array and categorize
-                this.config.resources.available = Array.from(allMembers).map(m => JSON.parse(m));
-                this.categorizeResources();
-                this.renderAvailableResources();
+            if (!teamResponse.ok) {
+                throw new Error(`Failed to fetch teams: ${teamResponse.status}`);
             }
+
+            const teamData = await teamResponse.json();
+            const teams = teamData.value || [];
+
+            let allMembers = [];
+            
+            // Get members for each team
+            for (const team of teams) {
+                try {
+                    const memberResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams/${team.id}/members?api-version=6.0`, {
+                        headers: {
+                            'Authorization': `Basic ${btoa(':' + patToken)}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (memberResponse.ok) {
+                        const memberData = await memberResponse.json();
+                        const members = memberData.value.map(member => ({
+                            id: member.identity.id,
+                            name: member.identity.displayName,
+                            email: member.identity.uniqueName || '',
+                            teamId: team.id,
+                            teamName: team.name,
+                            isActive: member.identity.isActive !== false
+                        }));
+                        allMembers.push(...members);
+                    }
+                } catch (memberError) {
+                    console.warn(`Failed to load members for team ${team.name}:`, memberError);
+                }
+            }
+
+            // Remove duplicates by ID
+            const uniqueMembers = allMembers.filter((member, index, self) => 
+                index === self.findIndex(m => m.id === member.id)
+            );
+
+            this.config.resources.available = uniqueMembers;
+            this.categorizeResources();
+            this.renderAvailableResources();
+            this.showNotification(`Found ${uniqueMembers.length} team members`, 'success');
+
         } catch (error) {
             console.error('Failed to load resources:', error);
-            this.showNotification('Failed to load team members', 'error');
+            this.showNotification(`Failed to load team members: ${error.message}`, 'error');
         }
     }
 
@@ -336,7 +380,7 @@ class ConfigurationManager {
         };
 
         this.config.resources.available.forEach(resource => {
-            const name = resource.displayName.toLowerCase();
+            const name = resource.name.toLowerCase();
             if (name.includes('dev') || name.includes('engineer') || name.includes('developer')) {
                 this.config.resources.groups.developers.push(resource);
             } else if (name.includes('test') || name.includes('qa') || name.includes('quality')) {
@@ -367,13 +411,13 @@ class ConfigurationManager {
 
         container.innerHTML = resources.map(resource => {
             const isSelected = this.config.resources.selected.find(s => s.id === resource.id);
-            const initials = resource.displayName.split(' ').map(n => n[0]).join('').substring(0, 2);
+            const initials = resource.name.split(' ').map(n => n[0]).join('').substring(0, 2);
             
             return `
                 <div class="resource-item ${isSelected ? 'selected' : ''}" 
                      onclick="configManager.toggleResource('${resource.id}')">
                     <div class="resource-avatar">${initials}</div>
-                    <div class="resource-name">${resource.displayName}</div>
+                    <div class="resource-name">${resource.name}</div>
                 </div>
             `;
         }).join('');
@@ -419,30 +463,57 @@ class ConfigurationManager {
         try {
             const { org, project, patToken } = this.config.connection;
             
-            // Get all iterations
-            const response = await this.makeADORequest(`/${org}/${project}/_apis/work/teamsettings/iterations`, {
+            // Get the default team first
+            const teamResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=6.0`, {
                 headers: {
                     'Authorization': `Basic ${btoa(':' + patToken)}`,
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                this.config.iterations.available = data.value.map(iteration => ({
+            if (!teamResponse.ok) {
+                throw new Error(`Failed to fetch teams: ${teamResponse.status}`);
+            }
+
+            const teamData = await teamResponse.json();
+            const teams = teamData.value || [];
+
+            if (teams.length === 0) {
+                this.showNotification('No teams found to load iterations', 'warning');
+                return;
+            }
+
+            const team = teams[0]; // Use the first team
+
+            // Get iterations for the team
+            const iterationResponse = await fetch(`https://dev.azure.com/${org}/${project}/${team.id}/_apis/work/teamsettings/iterations?api-version=6.0`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(':' + patToken)}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (iterationResponse.ok) {
+                const iterationData = await iterationResponse.json();
+                this.config.iterations.available = iterationData.value.map(iteration => ({
                     id: iteration.id,
                     name: iteration.name,
                     path: iteration.path,
                     startDate: iteration.attributes?.startDate,
-                    finishDate: iteration.attributes?.finishDate
+                    finishDate: iteration.attributes?.finishDate,
+                    timeFrame: iteration.attributes?.timeFrame || 'current'
                 }));
 
                 this.renderAvailableIterations();
                 this.autoSelectCurrentSprint();
+                this.showNotification(`Found ${this.config.iterations.available.length} iterations`, 'success');
+            } else {
+                throw new Error(`Failed to fetch iterations: ${iterationResponse.status}`);
             }
+
         } catch (error) {
             console.error('Failed to load iterations:', error);
-            this.showNotification('Failed to load iterations', 'error');
+            this.showNotification(`Failed to load iterations: ${error.message}`, 'error');
         }
     }
 
@@ -574,15 +645,15 @@ class ConfigurationManager {
 
     // Utility Methods
     async makeADORequest(url, options = {}) {
-        const baseUrl = 'https://dev.azure.com';
-        const fullUrl = `${baseUrl}${url}?api-version=7.0`;
+        const { proxyUrl } = this.config.connection;
+        const finalUrl = proxyUrl ? `${proxyUrl}${url}` : `https://dev.azure.com${url}`;
         
-        return fetch(fullUrl, {
+        const response = await fetch(finalUrl, {
             ...options,
-            headers: {
-                ...options.headers
-            }
+            mode: 'cors'
         });
+        
+        return response;
     }
 
     showNotification(message, type = 'info') {

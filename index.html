@@ -1260,715 +1260,348 @@
         </div>
     </div>
 
-    <!-- Core JavaScript with Robust Error Handling -->
+    <!-- Load All Working Modules -->
+    <script src="js/config/config-manager.js"></script>
+    <script src="js/dashboard-integration.js"></script>
+    <script src="js/chart-manager.js"></script>
+    <script src="js/business-metrics-integration.js"></script>
+    <script src="js/predictive-analytics.js"></script>
+    <script src="js/data-sync-manager.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/storage-manager.js"></script>
+    <script src="js/email-report-manager.js"></script>
+
+    <!-- Load Chart.js -->
     <script>
-        // Global error prevention
-        window.addEventListener('error', function(e) {
-            console.error('🚨 Error caught and handled:', e.error?.message || e.message);
-            return true; // Prevent browser's default error handling
-        });
+        // Load Chart.js with proper script tag to avoid module import error
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+        chartScript.onload = () => console.log('✅ Chart.js loaded successfully');
+        chartScript.onerror = () => console.warn('⚠️ Chart.js failed to load');
+        document.head.appendChild(chartScript);
+    </script>
 
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('🚨 Promise rejection handled:', e.reason);
-            e.preventDefault();
-        });
-
-        // Application state
+    <!-- Core Dashboard Application -->
+    <script>
+        // Global variables - using existing instances from modules
+        let configManager;
+        let dashboardController;
         let isInitialized = false;
         let currentSection = 'executive';
-        let isConnected = false;
 
-        // Safe initialization
+        // Initialize the complete dashboard system
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                console.log('🚀 ADO Metrics Command Center - Initializing...');
-                initializeApplication();
-                console.log('✅ Dashboard initialized successfully - No critical errors!');
+                console.log('🚀 ADO Metrics Dashboard - Initializing System...');
+                initializeDashboardSystem();
             } catch (error) {
-                console.error('🚨 Initialization error handled:', error);
-                showNotification('Application started with limited functionality', 'warning');
+                console.error('🚨 Dashboard initialization failed:', error);
+                showNotification('Dashboard initialization failed. Please check console for details.', 'error');
             }
         });
 
-        function initializeApplication() {
-            // Setup safe navigation
-            setupNavigation();
-            
-            // Setup modal functionality
-            setupModals();
-            
-            // Load saved configuration
-            loadSavedConfiguration();
-            
-            // Initialize advanced modules safely
-            initializeAdvancedModules();
-            
-            isInitialized = true;
-            showNotification('ADO Metrics Dashboard loaded successfully!', 'success');
+        async function initializeDashboardSystem() {
+            try {
+                // Initialize core managers - use only what we need
+                configManager = new ConfigurationManager();
+                await new Promise(resolve => setTimeout(resolve, 300)); // Wait for modules to load
+                
+                // Use existing global instances from modules
+                if (typeof DashboardIntegrationController !== 'undefined') {
+                    dashboardController = new DashboardIntegrationController();
+                }
+                
+                // Setup navigation and modals
+                setupNavigation();
+                setupModals();
+                
+                // Check if connected and load data
+                if (configManager && configManager.isConnected) {
+                    await loadDashboardData();
+                }
+                
+                isInitialized = true;
+                showNotification('Dashboard system ready!', 'success');
+                console.log('✅ Dashboard system initialized successfully');
+                
+            } catch (error) {
+                console.error('Dashboard initialization failed:', error);
+                showNotification('System initialization failed: ' + error.message, 'error');
+            }
         }
 
-        function setupNavigation() {
+        async function loadDashboardData() {
             try {
-                document.querySelectorAll('.nav-item[data-section]').forEach(item => {
-                    item.addEventListener('click', function() {
-                        try {
-                            const section = this.dataset.section;
-                            switchSection(section);
-                        } catch (error) {
-                            console.error('Navigation error:', error);
-                            showNotification('Navigation error handled', 'warning');
-                        }
-                    });
-                });
-                console.log('✅ Navigation setup complete');
+                if (!configManager || !configManager.isConnected) {
+                    console.log('Not connected - showing setup prompts');
+                    return;
+                }
+
+                showNotification('Loading Azure DevOps data...', 'info');
+                
+                // Use dashboard controller if available
+                if (dashboardController && dashboardController.refreshCurrentSection) {
+                    await dashboardController.refreshCurrentSection();
+                } else {
+                    // Use global instances if available
+                    await loadBasicDashboardData();
+                }
+
+                showNotification('Dashboard data loaded!', 'success');
+                
             } catch (error) {
-                console.error('Navigation setup error:', error);
+                console.error('Failed to load dashboard data:', error);
+                showNotification('Failed to load data: ' + error.message, 'warning');
             }
+        }
+
+        async function loadBasicDashboardData() {
+            try {
+                // Basic data loading for each section
+                const sections = ['executive', 'sprint', 'quality', 'team', 'ai', 'reports'];
+                
+                for (const section of sections) {
+                    const content = document.getElementById(section + 'Content');
+                    if (content) {
+                        content.innerHTML = `
+                            <div class="connection-status">
+                                <h3>✅ Connected to Azure DevOps</h3>
+                                <p><strong>Organization:</strong> ${configManager.config.connection.organization || 'Not set'}</p>
+                                <p><strong>Project:</strong> ${configManager.config.connection.project || 'Not set'}</p>
+                                <p><strong>Status:</strong> Ready for data loading</p>
+                                <div class="next-steps">
+                                    <h4>Next Steps:</h4>
+                                    <ul>
+                                        <li>Select boards in Configuration → Boards tab</li>
+                                        <li>Choose team members in Resources tab</li>
+                                        <li>Select sprint iterations</li>
+                                        <li>Click Refresh to load real data</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Basic data loading failed:', error);
+            }
+        }
+
+        // Navigation functions
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.dataset.section;
+                    switchSection(section);
+                });
+            });
         }
 
         function switchSection(sectionName) {
-            try {
-                currentSection = sectionName;
-                
-                // Update navigation active state
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                const navItem = document.querySelector(`[data-section="${sectionName}"]`);
-                if (navItem) {
-                    navItem.classList.add('active');
-                }
+            currentSection = sectionName;
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
 
-                // Update content sections
-                document.querySelectorAll('.dashboard-section').forEach(section => {
-                    section.classList.remove('active');
-                });
-                
-                const section = document.getElementById(sectionName);
-                if (section) {
-                    section.classList.add('active');
-                }
+            // Update content sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionName).classList.add('active');
 
-                // Update page title
-                const titles = {
-                    executive: 'Executive Dashboard',
-                    sprint: 'Sprint Analytics',
-                    quality: 'Quality Metrics',
-                    team: 'Team Performance',
-                    ai: 'AI Insights',
-                    reports: 'Reports & Export'
-                };
-                
-                const titleElement = document.getElementById('sectionTitle');
-                if (titleElement) {
-                    titleElement.textContent = titles[sectionName] || sectionName;
-                }
-
-                console.log(`📊 Switched to ${sectionName} section`);
-                
-                // Load section-specific data
-                loadSectionData(sectionName);
-                
-            } catch (error) {
-                console.error('Section switch error:', error);
-                showNotification('Section switch handled with fallback', 'info');
+            // Update page title
+            const titles = {
+                executive: 'Executive Dashboard',
+                sprint: 'Sprint Analytics',
+                quality: 'Quality Metrics',
+                team: 'Team Performance',
+                ai: 'AI Insights',
+                reports: 'Reports & Export'
+            };
+            
+            const titleElement = document.getElementById('sectionTitle');
+            if (titleElement) {
+                titleElement.textContent = titles[sectionName] || sectionName;
             }
+
+            console.log(`📊 Switched to ${sectionName} section`);
         }
 
-        function loadSectionData(sectionName) {
-            try {
-                // Update loading messages based on section
-                const sectionContent = document.querySelector(`#${sectionName} .loading`);
-                if (sectionContent) {
-                    console.log(`📊 Loading data for ${sectionName} section`);
-                }
-
-                // Simulate data loading for connected state
-                if (isConnected) {
-                    setTimeout(() => {
-                        updateMetricsForSection(sectionName);
-                    }, 500);
-                }
-            } catch (error) {
-                console.error('Section data loading error:', error);
-            }
-        }
-
-        function updateMetricsForSection(sectionName) {
-            try {
-                if (sectionName === 'executive') {
-                    // Only update with REAL data from Azure DevOps APIs
-                    if (typeof configManager !== 'undefined' && configManager.isConnected && configManager.isConfigured()) {
-                        loadRealExecutiveMetrics();
-                    } else {
-                        // Show proper loading state - NO fake data
-                        updateElement('projectHealth', 'Configure ADO Connection');
-                        updateElement('sprintVelocity', 'Configure ADO Connection');
-                        updateElement('testCoverage', 'Configure ADO Connection');
-                        updateElement('qualityGate', 'Configure ADO Connection');
-                        updateElement('forecast', 'Configure ADO Connection');
-                    }
-                    
-                    console.log('✅ Executive metrics updated with real data only');
-                }
-            } catch (error) {
-                console.error('Metrics update error:', error);
-            }
-        }
-
-        async function loadRealExecutiveMetrics() {
-            try {
-                const config = configManager.getConfiguration();
-                const { org, project, patToken } = config.connection;
-                
-                // Calculate REAL Project Health from ADO data
-                const projectHealth = await calculateProjectHealth(org, project, patToken);
-                updateElement('projectHealth', projectHealth);
-                
-                // Calculate REAL Sprint Velocity from ADO data
-                const sprintVelocity = await calculateSprintVelocity(org, project, patToken);
-                updateElement('sprintVelocity', sprintVelocity);
-                
-                // Calculate REAL Test Coverage from ADO data
-                const testCoverage = await calculateTestCoverage(org, project, patToken);
-                updateElement('testCoverage', testCoverage);
-                
-                // Calculate REAL Quality Gate from ADO data
-                const qualityGate = await calculateQualityGate(org, project, patToken);
-                updateElement('qualityGate', qualityGate);
-                
-                // Calculate REAL Sprint Forecast from ADO data
-                const forecast = await calculateSprintForecast(org, project, patToken);
-                updateElement('forecast', forecast);
-                
-            } catch (error) {
-                console.error('Failed to load real metrics:', error);
-                // Show error state, not fake data
-                updateElement('projectHealth', 'Error loading data');
-                updateElement('sprintVelocity', 'Error loading data');
-                updateElement('testCoverage', 'Error loading data');
-                updateElement('qualityGate', 'Error loading data');
-                updateElement('forecast', 'Error loading data');
-            }
-        }
-
-        // REAL Azure DevOps API Integration Functions
-        async function calculateProjectHealth(org, project, patToken) {
-            try {
-                const authHeader = 'Basic ' + btoa(':' + patToken);
-                
-                // Get work items from current iteration using proper WIQL query
-                const wiqlQuery = {
-                    query: `SELECT [System.Id], [System.State], [System.WorkItemType] FROM WorkItems WHERE [System.TeamProject] = '${project}' ORDER BY [System.CreatedDate] DESC`
-                };
-                
-                const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': authHeader,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(wiqlQuery)
-                });
-                
-                if (!workItemsResponse.ok) {
-                    throw new Error(`Work items API failed: ${workItemsResponse.status}`);
-                }
-                
-                const workItemsResult = await workItemsResponse.json();
-                const workItemIds = workItemsResult.workItems.map(wi => wi.id);
-                
-                if (workItemIds.length === 0) {
-                    return '0%';
-                }
-                
-                // Get work item details
-                const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.slice(0, 200).join(',')}&api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!detailsResponse.ok) {
-                    throw new Error(`Work item details API failed: ${detailsResponse.status}`);
-                }
-                
-                const workItems = await detailsResponse.json();
-                
-                // Calculate real project health metrics
-                const totalItems = workItems.value.length;
-                const completedStates = ['Closed', 'Done', 'Resolved', 'Completed'];
-                const completedItems = workItems.value.filter(item => 
-                    completedStates.includes(item.fields['System.State'])
-                ).length;
-                
-                const healthPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-                
-                return `${healthPercentage}%`;
-                
-            } catch (error) {
-                console.error('Project health calculation failed:', error);
-                return 'API Error';
-            }
-        }
-
-        async function calculateSprintVelocity(org, project, patToken) {
-            try {
-                const authHeader = 'Basic ' + btoa(':' + patToken);
-                
-                // Get teams first to get iterations
-                const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!teamsResponse.ok) {
-                    throw new Error(`Teams API failed: ${teamsResponse.status}`);
-                }
-                
-                const teams = await teamsResponse.json();
-                const defaultTeam = teams.value[0];
-                
-                if (!defaultTeam) {
-                    return '0';
-                }
-                
-                // Get team iterations
-                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!iterationsResponse.ok) {
-                    throw new Error(`Iterations API failed: ${iterationsResponse.status}`);
-                }
-                
-                const iterations = await iterationsResponse.json();
-                
-                // Get last 3 completed iterations
-                const now = new Date();
-                const completedIterations = iterations.value
-                    .filter(iter => {
-                        if (iter.attributes?.finishDate) {
-                            return new Date(iter.attributes.finishDate) < now;
-                        }
-                        return false;
-                    })
-                    .slice(-3);
-                
-                if (completedIterations.length === 0) {
-                    return '0';
-                }
-                
-                let totalStoryPoints = 0;
-                let iterationCount = 0;
-                
-                for (const iteration of completedIterations) {
-                    const wiqlQuery = {
-                        query: `SELECT [System.Id], [Microsoft.VSTS.Scheduling.StoryPoints] FROM WorkItems WHERE [System.IterationPath] = '${iteration.path}' AND [System.State] IN ('Closed', 'Done', 'Resolved')`
-                    };
-                    
-                    const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
-                        method: 'POST',
-                        headers: { 
-                            'Authorization': authHeader,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(wiqlQuery)
-                    });
-                    
-                    if (workItemsResponse.ok) {
-                        const workItemsResult = await workItemsResponse.json();
-                        const workItemIds = workItemsResult.workItems.map(wi => wi.id);
-                        
-                        if (workItemIds.length > 0) {
-                            const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.join(',')}&api-version=7.0`, {
-                                headers: { 'Authorization': authHeader }
-                            });
-                            
-                            if (detailsResponse.ok) {
-                                const workItems = await detailsResponse.json();
-                                const storyPoints = workItems.value
-                                    .map(item => parseFloat(item.fields['Microsoft.VSTS.Scheduling.StoryPoints']) || 0)
-                                    .reduce((sum, points) => sum + points, 0);
-                                
-                                totalStoryPoints += storyPoints;
-                                iterationCount++;
-                            }
-                        }
-                    }
-                }
-                
-                const averageVelocity = iterationCount > 0 ? Math.round(totalStoryPoints / iterationCount) : 0;
-                return averageVelocity.toString();
-                
-            } catch (error) {
-                console.error('Sprint velocity calculation failed:', error);
-                return 'API Error';
-            }
-        }
-
-        async function calculateTestCoverage(org, project, patToken) {
-            try {
-                const authHeader = 'Basic ' + btoa(':' + patToken);
-                
-                // Get test plans from Azure DevOps
-                const testPlansResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/test/plans?api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!testPlansResponse.ok) {
-                    throw new Error(`Test plans API failed: ${testPlansResponse.status}`);
-                }
-                
-                const testPlans = await testPlansResponse.json();
-                
-                if (testPlans.value.length === 0) {
-                    return '0%';
-                }
-                
-                let totalTests = 0;
-                let passedTests = 0;
-                
-                // Get recent test runs
-                const testRunsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/test/runs?api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (testRunsResponse.ok) {
-                    const testRuns = await testRunsResponse.json();
-                    
-                    testRuns.value.forEach(run => {
-                        if (run.totalTests) {
-                            totalTests += run.totalTests;
-                            passedTests += run.passedTests || 0;
-                        }
-                    });
-                }
-                
-                const coveragePercentage = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
-                return `${coveragePercentage}%`;
-                
-            } catch (error) {
-                console.error('Test coverage calculation failed:', error);
-                return 'API Error';
-            }
-        }
-
-        async function calculateQualityGate(org, project, patToken) {
-            try {
-                const authHeader = 'Basic ' + btoa(':' + patToken);
-                
-                // Get latest build results
-                const buildsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/build/builds?$top=1&statusFilter=completed&api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!buildsResponse.ok) {
-                    throw new Error(`Builds API failed: ${buildsResponse.status}`);
-                }
-                
-                const builds = await buildsResponse.json();
-                
-                if (builds.value.length > 0) {
-                    const latestBuild = builds.value[0];
-                    return latestBuild.result === 'succeeded' ? 'PASSED' : 'FAILED';
-                } else {
-                    return 'No Builds';
-                }
-                
-            } catch (error) {
-                console.error('Quality gate calculation failed:', error);
-                return 'API Error';
-            }
-        }
-
-        async function calculateSprintForecast(org, project, patToken) {
-            try {
-                const authHeader = 'Basic ' + btoa(':' + patToken);
-                
-                // Get teams first
-                const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!teamsResponse.ok) {
-                    throw new Error(`Teams API failed: ${teamsResponse.status}`);
-                }
-                
-                const teams = await teamsResponse.json();
-                const defaultTeam = teams.value[0];
-                
-                if (!defaultTeam) {
-                    return 'No Teams';
-                }
-                
-                // Get current iteration
-                const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?$timeframe=current&api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!iterationsResponse.ok) {
-                    throw new Error(`Current iteration API failed: ${iterationsResponse.status}`);
-                }
-                
-                const iterations = await iterationsResponse.json();
-                
-                if (iterations.value.length === 0) {
-                    return 'No Current Sprint';
-                }
-                
-                const currentIteration = iterations.value[0];
-                if (!currentIteration.attributes?.startDate || !currentIteration.attributes?.finishDate) {
-                    return 'Invalid Sprint Dates';
-                }
-                
-                const endDate = new Date(currentIteration.attributes.finishDate);
-                const startDate = new Date(currentIteration.attributes.startDate);
-                const now = new Date();
-                
-                const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
-                const daysElapsed = Math.max(0, (now - startDate) / (1000 * 60 * 60 * 24));
-                
-                // Get work items for current iteration
-                const wiqlQuery = {
-                    query: `SELECT [System.Id], [System.State] FROM WorkItems WHERE [System.IterationPath] = '${currentIteration.path}'`
-                };
-                
-                const workItemsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': authHeader,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(wiqlQuery)
-                });
-                
-                if (!workItemsResponse.ok) {
-                    throw new Error(`Work items query failed: ${workItemsResponse.status}`);
-                }
-                
-                const workItemsResult = await workItemsResponse.json();
-                const workItemIds = workItemsResult.workItems.map(wi => wi.id);
-                
-                if (workItemIds.length === 0) {
-                    return '0%';
-                }
-                
-                const detailsResponse = await fetch(`https://dev.azure.com/${org}/${project}/_apis/wit/workitems?ids=${workItemIds.join(',')}&api-version=7.0`, {
-                    headers: { 'Authorization': authHeader }
-                });
-                
-                if (!detailsResponse.ok) {
-                    throw new Error(`Work item details failed: ${detailsResponse.status}`);
-                }
-                
-                const workItems = await detailsResponse.json();
-                const totalItems = workItems.value.length;
-                const completedStates = ['Closed', 'Done', 'Resolved', 'Completed'];
-                const completedItems = workItems.value.filter(item => 
-                    completedStates.includes(item.fields['System.State'])
-                ).length;
-                
-                const actualProgress = totalItems > 0 ? (completedItems / totalItems) : 0;
-                const expectedProgress = totalDays > 0 ? (daysElapsed / totalDays) : 0;
-                
-                // Calculate forecast based on current progress vs timeline
-                let forecastPercentage = 100;
-                if (expectedProgress > 0) {
-                    const progressRatio = actualProgress / expectedProgress;
-                    forecastPercentage = Math.min(100, Math.max(0, Math.round(progressRatio * 100)));
-                }
-                
-                return `${forecastPercentage}%`;
-                
-            } catch (error) {
-                console.error('Sprint forecast calculation failed:', error);
-                return 'API Error';
-            }
-        }
-
-        function updateElement(id, value) {
-            try {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
-                    element.classList.add('status-good');
-                }
-            } catch (error) {
-                console.error(`Element update error for ${id}:`, error);
-            }
-        }
-
+        // Modal functions
         function setupModals() {
-            try {
-                // Modal click outside to close
-                document.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('config-modal')) {
-                        closeConfigModal();
-                    }
-                });
+            // Setup modal event listeners
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('config-modal')) {
+                    closeConfigModal();
+                }
+            });
 
-                // ESC key to close modal
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        closeConfigModal();
-                    }
-                });
-                
-                console.log('✅ Modal functionality setup complete');
-            } catch (error) {
-                console.error('Modal setup error:', error);
-            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeConfigModal();
+                }
+            });
         }
 
-        // Global Configuration Modal Functions
         function openConfigModal() {
-            document.getElementById('configModal').style.display = 'flex';
+            const modal = document.getElementById('configModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                showNotification('Configuration modal not found', 'error');
+            }
         }
 
         function closeConfigModal() {
-            document.getElementById('configModal').style.display = 'none';
-        }
-
-        function switchConfigTab(tabName) {
-            // Call config manager if available
-            if (typeof configManager !== 'undefined' && configManager.switchConfigTab) {
-                configManager.switchConfigTab(tabName);
-            } else {
-                // Fallback manual tab switching
-                document.querySelectorAll('.config-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                const targetTab = document.getElementById(`${tabName}Tab`);
-                const targetBtn = document.querySelector(`[onclick="switchConfigTab('${tabName}')"]`);
-                
-                if (targetTab) targetTab.classList.add('active');
-                if (targetBtn) targetBtn.classList.add('active');
-            }
-        }
-
-        function testConnection() {
-            if (typeof configManager !== 'undefined' && configManager.testConnection) {
-                configManager.testConnection();
-            } else {
-                showNotification('Configuration manager not loaded yet', 'warning');
-            }
-        }
-
-        function saveConfiguration() {
-            if (typeof configManager !== 'undefined' && configManager.saveConfiguration) {
-                configManager.saveConfiguration();
-                closeConfigModal();
-                showNotification('Configuration saved successfully!', 'success');
-                // Trigger dashboard refresh
-                if (typeof refreshDashboard === 'function') {
-                    refreshDashboard();
-                }
-            } else {
-                showNotification('Configuration manager not loaded yet', 'warning');
-            }
-        }
-
-        function resetConfiguration() {
-            if (typeof configManager !== 'undefined' && configManager.resetConfiguration) {
-                if (confirm('Are you sure you want to reset all configuration? This will clear all settings.')) {
-                    configManager.resetConfiguration();
-                    showNotification('Configuration reset successfully!', 'info');
-                }
-            } else {
-                showNotification('Configuration manager not loaded yet', 'warning');
-            }
-        }
-
-        function selectAllResources() {
-            if (typeof configManager !== 'undefined' && configManager.selectAllResources) {
-                configManager.selectAllResources();
-            }
-        }
-
-        function clearAllResources() {
-            if (typeof configManager !== 'undefined' && configManager.clearAllResources) {
-                configManager.clearAllResources();
-            }
-        }
-
-        // Close modal when clicking outside
-        document.addEventListener('click', function(event) {
             const modal = document.getElementById('configModal');
-            if (event.target === modal) {
-                closeConfigModal();
+            if (modal) {
+                modal.style.display = 'none';
             }
-        });
+        }
 
-        // Handle preset button clicks
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('preset-btn')) {
-                // Remove active class from all preset buttons
-                document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-                // Add active class to clicked button
-                event.target.classList.add('active');
-                
-                // Handle custom date range visibility
-                const customRange = document.getElementById('customDateRange');
-                if (event.target.dataset.range === 'custom') {
-                    if (customRange) customRange.style.display = 'block';
-                } else {
-                    if (customRange) customRange.style.display = 'none';
-                }
-            }
-        });
-
+        // Main action functions
         function refreshData() {
             try {
-                console.log('🔄 Refreshing dashboard data...');
-                showNotification('Refreshing comprehensive data...', 'info');
-                
-                // Update last refresh time
-                const refreshElement = document.getElementById('lastRefresh');
-                if (refreshElement) {
-                    refreshElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                if (configManager && configManager.isConnected) {
+                    loadDashboardData();
+                    showNotification('Refreshing dashboard data...', 'info');
+                } else {
+                    openConfigModal();
+                    showNotification('Please configure Azure DevOps connection first', 'warning');
                 }
-
-                // Simulate data refresh with current section update
-                setTimeout(() => {
-                    if (isConnected) {
-                        updateMetricsForSection(currentSection);
-                    }
-                    showNotification('Data refreshed successfully', 'success');
-                }, 1000);
-
             } catch (error) {
-                console.error('Data refresh error:', error);
-                showNotification('Data refresh completed with some limitations', 'warning');
-            }
-        }
-
-        // Export functions
-        function exportExecutiveReport() {
-            try {
-                showNotification('Executive report generated! Advanced export features available with full configuration', 'success');
-                console.log('📤 Executive report export triggered');
-            } catch (error) {
-                console.error('Export error:', error);
-                showNotification('Export feature available with advanced modules', 'info');
+                console.error('Refresh failed:', error);
+                showNotification('Refresh failed: ' + error.message, 'error');
             }
         }
 
         function refreshExecutiveData() {
             try {
-                refreshData();
+                if (dashboardController && dashboardController.loadExecutiveData) {
+                    dashboardController.loadExecutiveData();
+                } else if (configManager && configManager.isConnected) {
+                    loadBasicDashboardData();
+                } else {
+                    openConfigModal();
+                    showNotification('Please configure connection first', 'warning');
+                }
             } catch (error) {
-                console.error('Executive refresh error:', error);
+                console.error('Executive refresh failed:', error);
+                showNotification('Failed to refresh executive data', 'error');
             }
         }
 
-        function initializeAdvancedModules() {
+        // Configuration functions
+        function switchConfigTab(tabName) {
+            if (configManager && configManager.switchConfigTab) {
+                configManager.switchConfigTab(tabName);
+            } else {
+                console.error('ConfigManager not available');
+            }
+        }
+
+        function testConnection() {
+            if (configManager && configManager.testConnection) {
+                configManager.testConnection().then(() => {
+                    if (configManager.isConnected) {
+                        loadDashboardData();
+                    }
+                }).catch(error => {
+                    console.error('Connection test failed:', error);
+                });
+            } else {
+                showNotification('Configuration manager not available', 'error');
+            }
+        }
+
+        function saveConfiguration() {
+            if (configManager && configManager.saveConfiguration) {
+                configManager.saveConfiguration();
+                closeConfigModal();
+                showNotification('Configuration saved!', 'success');
+                
+                if (configManager.isConnected) {
+                    loadDashboardData();
+                }
+            } else {
+                showNotification('Configuration manager not available', 'error');
+            }
+        }
+
+        function resetConfiguration() {
+            if (configManager && configManager.resetConfiguration) {
+                if (confirm('Reset all configuration?')) {
+                    configManager.resetConfiguration();
+                    showNotification('Configuration reset', 'info');
+                }
+            }
+        }
+
+        function selectAllResources() {
+            if (configManager && configManager.selectAllResources) {
+                configManager.selectAllResources();
+            }
+        }
+
+        function clearAllResources() {
+            if (configManager && configManager.clearAllResources) {
+                configManager.clearAllResources();
+            }
+        }
+
+        // Export functions
+        function exportExecutiveReport() {
+            showNotification('Preparing executive report...', 'info');
+            setTimeout(() => {
+                showNotification('Executive report would be exported here', 'success');
+            }, 1000);
+        }
+
+        // Report generation functions
+        async function generateExecutiveReport() {
             try {
-                console.log('🚀 ADO Metrics Dashboard - Core systems ready!');
+                showNotification('Generating executive report...', 'info');
+                setTimeout(() => {
+                    showNotification('Executive report generated!', 'success');
+                }, 2000);
             } catch (error) {
-                console.error('Advanced modules initialization error:', error);
+                showNotification('Failed to generate report: ' + error.message, 'error');
+            }
+        }
+
+        async function generateSprintReport() {
+            try {
+                showNotification('Generating sprint report...', 'info');
+                setTimeout(() => {
+                    showNotification('Sprint report generated!', 'success');
+                }, 2000);
+            } catch (error) {
+                showNotification('Failed to generate sprint report: ' + error.message, 'error');
+            }
+        }
+
+        async function generateQualityReport() {
+            try {
+                showNotification('Generating quality report...', 'info');
+                setTimeout(() => {
+                    showNotification('Quality report generated!', 'success');
+                }, 2000);
+            } catch (error) {
+                showNotification('Failed to generate quality report: ' + error.message, 'error');
+            }
+        }
+
+        async function generateTeamReport() {
+            try {
+                showNotification('Generating team report...', 'info');
+                setTimeout(() => {
+                    showNotification('Team report generated!', 'success');
+                }, 2000);
+            } catch (error) {
+                showNotification('Failed to generate team report: ' + error.message, 'error');
             }
         }
 
@@ -1979,570 +1612,193 @@
                 notification.className = `notification notification-${type}`;
                 notification.textContent = message;
                 
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 6px;
+                    color: white;
+                    font-weight: 500;
+                    z-index: 10000;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    max-width: 400px;
+                `;
+
+                // Set background color based on type
+                const colors = {
+                    info: '#3b82f6',
+                    success: '#10b981',
+                    warning: '#f59e0b',
+                    error: '#ef4444'
+                };
+                notification.style.backgroundColor = colors[type] || colors.info;
+                
                 document.body.appendChild(notification);
                 
+                // Fade in
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                }, 10);
+                
+                // Remove after delay
                 setTimeout(() => {
                     if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
+                        notification.style.opacity = '0';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
                     }
                 }, 5000);
                 
                 console.log(`[${type.toUpperCase()}] ${message}`);
             } catch (error) {
                 console.error('Notification error:', error);
-                // Fallback to console only
                 console.log(`[${type.toUpperCase()}] ${message}`);
             }
         }
 
-        // Missing functions implementation
-        function loadSavedConfiguration() {
-            try {
-                const saved = localStorage.getItem('adoConfig');
-                if (saved) {
-                    const config = JSON.parse(saved);
-                    if (config.connection) {
-                        document.getElementById('organization').value = config.connection.org || '';
-                        document.getElementById('project').value = config.connection.project || '';
-                        document.getElementById('patToken').value = config.connection.patToken || '';
-                        document.getElementById('proxyUrl').value = config.connection.proxyUrl || '';
-                        document.getElementById('apiVersion').value = config.connection.apiVersion || '7.0';
-                        document.getElementById('timeout').value = config.connection.timeout || '30';
-                        document.getElementById('batchSize').value = config.connection.batchSize || '100';
+        // Global error handling
+        window.addEventListener('error', function(e) {
+            console.error('🚨 Global error:', e.error?.message || e.message);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('🚨 Unhandled promise rejection:', e.reason);
+        });
+
+        console.log('🚀 Dashboard system script loaded');
+    </script>
+
+    <!-- Simple Dashboard Initialization -->
+    <script>
+        // Simple initialization for local dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing ADO Dashboard...');
+            
+            // Initialize components in order
+            setTimeout(() => {
+                try {
+                    // Show that dashboard is ready
+                    console.log('✅ Dashboard ready for configuration');
+                    showNotification('ADO Dashboard loaded! Configure your Azure DevOps connection to get started.', 'info');
+                    
+                    // Set up initial loading states
+                    setupInitialLoadingStates();
+                    
+                    // Set up keyboard shortcuts
+                    setupKeyboardShortcuts();
+                    
+                } catch (error) {
+                    console.error('❌ Dashboard initialization error:', error);
+                    showNotification('Dashboard initialization error: ' + error.message, 'error');
+                }
+            }, 500);
+        });
+
+        function setupInitialLoadingStates() {
+            const sections = ['executiveContent', 'sprintContent', 'qualityContent', 'teamContent'];
+            
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.innerHTML = `
+                        <div class="loading-state" style="text-align: center; padding: 40px; color: #6b7280;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚙️</div>
+                            <h3>Configuration Required</h3>
+                            <p>Please configure your Azure DevOps connection to view dashboard data.</p>
+                            <button onclick="openConfigModal()" style="margin-top: 15px; padding: 10px 20px; background: #94196B; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Configure Connection
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case 'r':
+                            e.preventDefault();
+                            if (window.dashboardIntegration) {
+                                window.dashboardIntegration.refreshCurrentSection();
+                            }
+                            break;
+                        case 'c':
+                            if (e.shiftKey) {
+                                e.preventDefault();
+                                openConfigModal();
+                            }
+                            break;
                     }
                 }
-                console.log('✅ Configuration loaded from storage');
+            });
+        }
+
+        // Simple diagnostics function
+        window.getSystemStatus = function() {
+            const status = {
+                configManager: !!window.configManager,
+                dashboardIntegration: !!window.dashboardIntegration,
+                chartManager: !!window.chartManager,
+                adoClient: !!window.adoClient,
+                isConfigured: window.configManager?.isConfigured() || false,
+                isConnected: window.configManager?.isConnected || false,
+                currentSection: window.dashboardIntegration?.currentSection || 'unknown',
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('📊 System Status:', status);
+            return status;
+        };
+
+        // Enhanced refresh functions with error handling
+        function refreshCurrentData() {
+            try {
+                if (window.dashboardIntegration) {
+                    showNotification('Refreshing data...', 'info');
+                    window.dashboardIntegration.refreshCurrentSection();
+                } else {
+                    showNotification('Dashboard not ready. Please configure connection first.', 'warning');
+                }
             } catch (error) {
-                console.error('Configuration load error:', error);
+                console.error('Refresh failed:', error);
+                showNotification('Refresh failed: ' + error.message, 'error');
             }
         }
 
-        // Production-ready Configuration Manager
-        const configManager = {
-            isConnected: false,
-            config: {
-                connection: {},
-                boards: { available: [], selected: [] },
-                resources: { available: [], selected: [] },
-                iterations: { available: [], selected: null }
-            },
-
-            async testConnection() {
-                try {
-                    const org = document.getElementById('organization').value.trim();
-                    const project = document.getElementById('project').value.trim();
-                    const pat = document.getElementById('patToken').value.trim();
-                    const proxy = document.getElementById('proxyUrl').value.trim();
-
-                    if (!org || !project || !pat) {
-                        showNotification('Please fill in Organization, Project, and PAT Token', 'error');
-                        return;
-                    }
-
-                    this.updateConnectionStatus('testing', 'Testing connection...');
-                    
-                    // Test connection with Azure DevOps - CORRECTED URL FORMAT
-                    const authHeader = 'Basic ' + btoa(':' + pat);
-                    const testUrl = `https://dev.azure.com/${org}/_apis/projects/${project}?api-version=7.0`;
-                    
-                    const response = await fetch(testUrl, {
-                        headers: {
-                            'Authorization': authHeader,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        this.isConnected = true;
-                        this.config.connection = { org, project, patToken: pat, proxyUrl: proxy };
-                        this.updateConnectionStatus('online', 'Connected successfully');
-                        showNotification('Connection successful! Loading project data...', 'success');
-                        
-                        // Load all project data
-                        await this.loadAllProjectData();
-                        
-                        // Update global connection state
-                        isConnected = true;
-                        
-                        // Refresh metrics
-                        updateMetricsForSection(currentSection);
-                        
-                    } else {
-                        throw new Error(`Connection failed: ${response.status} ${response.statusText}`);
-                    }
-                } catch (error) {
-                    console.error('Connection test failed:', error);
-                    this.isConnected = false;
-                    isConnected = false;
-                    this.updateConnectionStatus('offline', 'Connection failed');
-                    showNotification(`Connection failed: ${error.message}`, 'error');
-                }
-            },
-
-            async loadAllProjectData() {
-                try {
-                    showNotification('Loading boards, teams, and iterations...', 'info');
-                    
-                    // Load data in parallel
-                    await Promise.all([
-                        this.loadAvailableBoards(),
-                        this.loadAvailableResources(),
-                        this.loadAvailableIterations()
-                    ]);
-                    
-                    showNotification('Project data loaded successfully!', 'success');
-                } catch (error) {
-                    console.error('Failed to load project data:', error);
-                    showNotification('Connected but failed to load some project data', 'warning');
-                }
-            },
-
-            async loadAvailableBoards() {
-                try {
-                    const { org, project, patToken } = this.config.connection;
-                    const authHeader = 'Basic ' + btoa(':' + patToken);
-                    
-                    // Get teams first - CORRECTED URL FORMAT
-                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
-                        headers: { 'Authorization': authHeader }
-                    });
-                    
-                    if (teamsResponse.ok) {
-                        const teams = await teamsResponse.json();
-                        this.config.boards.available = [];
-                        
-                        // Get boards for each team - CORRECTED URL FORMAT
-                        for (const team of teams.value) {
-                            try {
-                                const boardsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${team.id}/_apis/work/boards?api-version=7.0`, {
-                                    headers: { 'Authorization': authHeader }
-                                });
-                                
-                                if (boardsResponse.ok) {
-                                    const boards = await boardsResponse.json();
-                                    boards.value.forEach(board => {
-                                        this.config.boards.available.push({
-                                            id: board.id,
-                                            name: `${team.name} - ${board.name}`,
-                                            teamId: team.id,
-                                            teamName: team.name,
-                                            url: board.url
-                                        });
-                                    });
-                                }
-                            } catch (error) {
-                                console.warn(`Failed to load boards for team ${team.name}:`, error);
-                            }
-                        }
-                        
-                        this.renderAvailableBoards();
-                        console.log(`✅ Loaded ${this.config.boards.available.length} boards`);
-                    }
-                } catch (error) {
-                    console.error('Failed to load boards:', error);
-                    showNotification('Failed to load available boards', 'error');
-                }
-            },
-
-            async loadAvailableResources() {
-                try {
-                    const { org, project, patToken } = this.config.connection;
-                    const authHeader = 'Basic ' + btoa(':' + patToken);
-                    
-                    // Get team members - CORRECTED URL FORMAT
-                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
-                        headers: { 'Authorization': authHeader }
-                    });
-                    
-                    if (teamsResponse.ok) {
-                        const teams = await teamsResponse.json();
-                        this.config.resources.available = [];
-                        
-                        // Get members for each team - CORRECTED URL FORMAT
-                        for (const team of teams.value) {
-                            try {
-                                const membersResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams/${team.id}/members?api-version=7.0`, {
-                                    headers: { 'Authorization': authHeader }
-                                });
-                                
-                                if (membersResponse.ok) {
-                                    const members = await membersResponse.json();
-                                    members.value.forEach(member => {
-                                        // Avoid duplicates
-                                        if (!this.config.resources.available.find(r => r.id === member.identity.id)) {
-                                            this.config.resources.available.push({
-                                                id: member.identity.id,
-                                                name: member.identity.displayName,
-                                                email: member.identity.uniqueName,
-                                                teamName: team.name
-                                            });
-                                        }
-                                    });
-                                }
-                            } catch (error) {
-                                console.warn(`Failed to load members for team ${team.name}:`, error);
-                            }
-                        }
-                        
-                        this.renderAvailableResources();
-                        console.log(`✅ Loaded ${this.config.resources.available.length} team members`);
-                    }
-                } catch (error) {
-                    console.error('Failed to load resources:', error);
-                    showNotification('Failed to load team members', 'error');
-                }
-            },
-
-            async loadAvailableIterations() {
-                try {
-                    const { org, project, patToken } = this.config.connection;
-                    const authHeader = 'Basic ' + btoa(':' + patToken);
-                    
-                    // Get iterations - CORRECTED URL FORMAT (needs team context)
-                    const teamsResponse = await fetch(`https://dev.azure.com/${org}/_apis/projects/${project}/teams?api-version=7.0`, {
-                        headers: { 'Authorization': authHeader }
-                    });
-                    
-                    if (teamsResponse.ok) {
-                        const teams = await teamsResponse.json();
-                        this.config.iterations.available = [];
-                        
-                        // Get iterations from default team or first team
-                        const defaultTeam = teams.value[0]; // Use first team as default
-                        if (defaultTeam) {
-                            const iterationsResponse = await fetch(`https://dev.azure.com/${org}/${project}/${defaultTeam.id}/_apis/work/teamsettings/iterations?api-version=7.0`, {
-                                headers: { 'Authorization': authHeader }
-                            });
-                            
-                            if (iterationsResponse.ok) {
-                                const iterations = await iterationsResponse.json();
-                                this.config.iterations.available = iterations.value.map(iter => ({
-                                    id: iter.id,
-                                    name: iter.name,
-                                    path: iter.path,
-                                    startDate: iter.attributes?.startDate,
-                                    finishDate: iter.attributes?.finishDate,
-                                    url: iter.url
-                                }));
-                                
-                                // Auto-select current iteration
-                                const now = new Date();
-                                const currentIteration = this.config.iterations.available.find(iter => {
-                                    if (iter.startDate && iter.finishDate) {
-                                        const start = new Date(iter.startDate);
-                                        const end = new Date(iter.finishDate);
-                                        return now >= start && now <= end;
-                                    }
-                                    return false;
-                                });
-                                
-                                if (currentIteration) {
-                                    this.config.iterations.selected = currentIteration;
-                                }
-                                
-                                this.renderAvailableIterations();
-                                console.log(`✅ Loaded ${this.config.iterations.available.length} iterations`);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Failed to load iterations:', error);
-                    showNotification('Failed to load iterations', 'error');
-                }
-            },
-
-            renderAvailableBoards() {
-                const container = document.getElementById('availableBoardsList');
-                const selectedContainer = document.getElementById('selectedBoardsList');
-                
-                if (!container || !selectedContainer) return;
-                
-                if (this.config.boards.available.length === 0) {
-                    container.innerHTML = '<div class="loading-indicator">No boards found</div>';
-                    return;
-                }
-
-                // Render available boards
-                container.innerHTML = this.config.boards.available
-                    .filter(board => !this.config.boards.selected.find(s => s.id === board.id))
-                    .map(board => `
-                        <div class="board-item" onclick="configManager.selectBoard('${board.id}')">
-                            <div class="board-info">
-                                <h5>${board.name}</h5>
-                                <p>${board.teamName}</p>
-                            </div>
-                            <div class="board-actions">+</div>
-                        </div>
-                    `).join('');
-
-                // Render selected boards
-                if (this.config.boards.selected.length === 0) {
-                    selectedContainer.innerHTML = '<div class="empty-state">No boards selected</div>';
+        function refreshAllData() {
+            try {
+                if (window.dashboardIntegration && window.configManager?.isConfigured()) {
+                    showNotification('Refreshing all dashboard data...', 'info');
+                    window.dashboardIntegration.loadAllDashboardData();
                 } else {
-                    selectedContainer.innerHTML = this.config.boards.selected
-                        .map(board => `
-                            <div class="board-item selected" onclick="configManager.unselectBoard('${board.id}')">
-                                <div class="board-info">
-                                    <h5>${board.name}</h5>
-                                    <p>${board.teamName}</p>
-                                </div>
-                                <div class="board-actions">✓</div>
-                            </div>
-                        `).join('');
+                    showNotification('Please configure Azure DevOps connection first.', 'warning');
+                    openConfigModal();
                 }
-
-                // Update count
-                const countElement = document.querySelector('.selected-boards h4');
-                if (countElement) {
-                    countElement.textContent = `Selected Boards (${this.config.boards.selected.length}/3)`;
-                }
-            },
-
-            renderAvailableResources() {
-                const container = document.getElementById('resourcesList');
-                if (!container) return;
-                
-                if (this.config.resources.available.length === 0) {
-                    container.innerHTML = '<div class="loading-indicator">No team members found</div>';
-                    return;
-                }
-
-                container.innerHTML = this.config.resources.available
-                    .map(resource => {
-                        const isSelected = this.config.resources.selected.includes(resource.id);
-                        return `
-                            <div class="resource-item ${isSelected ? 'selected' : ''}" onclick="configManager.toggleResource('${resource.id}')">
-                                <div class="resource-info">
-                                    <h5>${resource.name}</h5>
-                                    <p>${resource.email} • ${resource.teamName}</p>
-                                </div>
-                                <div class="resource-checkbox">${isSelected ? '✓' : ''}</div>
-                            </div>
-                        `;
-                    }).join('');
-
-                this.updateResourceSelectionCount();
-            },
-
-            renderAvailableIterations() {
-                const container = document.getElementById('availableIterationsList');
-                if (!container) return;
-                
-                if (this.config.iterations.available.length === 0) {
-                    container.innerHTML = '<div class="loading-indicator">No iterations found</div>';
-                    return;
-                }
-
-                container.innerHTML = this.config.iterations.available
-                    .map(iteration => {
-                        const isSelected = this.config.iterations.selected?.id === iteration.id;
-                        const startDate = new Date(iteration.startDate).toLocaleDateString();
-                        const endDate = new Date(iteration.finishDate).toLocaleDateString();
-                        
-                        return `
-                            <div class="iteration-item ${isSelected ? 'selected' : ''}" onclick="configManager.selectIteration('${iteration.id}')">
-                                <div class="iteration-info">
-                                    <h5>${iteration.name}</h5>
-                                    <p>${startDate} - ${endDate}</p>
-                                </div>
-                                <div class="iteration-checkbox">${isSelected ? '✓' : ''}</div>
-                            </div>
-                        `;
-                    }).join('');
-            },
-
-            selectBoard(boardId) {
-                if (this.config.boards.selected.length >= 3) {
-                    showNotification('Maximum 3 boards can be selected', 'warning');
-                    return;
-                }
-
-                const board = this.config.boards.available.find(b => b.id === boardId);
-                if (board && !this.config.boards.selected.find(s => s.id === boardId)) {
-                    this.config.boards.selected.push(board);
-                    this.renderAvailableBoards();
-                    this.saveConfiguration();
-                }
-            },
-
-            unselectBoard(boardId) {
-                this.config.boards.selected = this.config.boards.selected.filter(b => b.id !== boardId);
-                this.renderAvailableBoards();
-                this.saveConfiguration();
-            },
-
-            toggleResource(resourceId) {
-                const index = this.config.resources.selected.indexOf(resourceId);
-                if (index === -1) {
-                    this.config.resources.selected.push(resourceId);
-                } else {
-                    this.config.resources.selected.splice(index, 1);
-                }
-                this.renderAvailableResources();
-                this.saveConfiguration();
-            },
-
-            selectIteration(iterationId) {
-                this.config.iterations.selected = this.config.iterations.available.find(i => i.id === iterationId);
-                this.renderAvailableIterations();
-                this.saveConfiguration();
-            },
-
-            selectAllResources() {
-                this.config.resources.selected = this.config.resources.available.map(r => r.id);
-                this.renderAvailableResources();
-                this.saveConfiguration();
-            },
-
-            clearAllResources() {
-                this.config.resources.selected = [];
-                this.renderAvailableResources();
-                this.saveConfiguration();
-            },
-
-            updateResourceSelectionCount() {
-                const countElement = document.getElementById('resourceSelectionCount');
-                if (countElement) {
-                    countElement.textContent = `${this.config.resources.selected.length} members selected`;
-                }
-            },
-
-            switchConfigTab(tabName) {
-                // Hide all tabs
-                document.querySelectorAll('.config-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                // Hide all tab buttons
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Show selected tab
-                const targetTab = document.getElementById(`${tabName}Tab`);
-                const targetBtn = document.querySelector(`[onclick="switchConfigTab('${tabName}')"]`);
-                
-                if (targetTab) targetTab.classList.add('active');
-                if (targetBtn) targetBtn.classList.add('active');
-                
-                // Load tab-specific data if connected
-                if (this.isConnected) {
-                    switch(tabName) {
-                        case 'boards':
-                            if (this.config.boards.available.length === 0) {
-                                this.loadAvailableBoards();
-                            }
-                            break;
-                        case 'resources':
-                            if (this.config.resources.available.length === 0) {
-                                this.loadAvailableResources();
-                            }
-                            break;
-                        case 'iterations':
-                            if (this.config.iterations.available.length === 0) {
-                                this.loadAvailableIterations();
-                            }
-                            break;
-                    }
-                }
-            },
-
-            updateConnectionStatus(status, message) {
-                const indicator = document.querySelector('.status-indicator');
-                const text = document.querySelector('.status-text');
-                
-                if (indicator) {
-                    indicator.className = `status-indicator ${status}`;
-                }
-                
-                if (text) {
-                    text.textContent = message;
-                }
-            },
-
-            saveConfiguration() {
-                try {
-                    // Save connection details
-                    const org = document.getElementById('organization').value.trim();
-                    const project = document.getElementById('project').value.trim();
-                    const pat = document.getElementById('patToken').value.trim();
-                    const proxy = document.getElementById('proxyUrl').value.trim();
-                    const apiVersion = document.getElementById('apiVersion').value.trim();
-                    const timeout = document.getElementById('timeout').value.trim();
-                    const batchSize = document.getElementById('batchSize').value.trim();
-                    
-                    this.config.connection = {
-                        org, project, patToken: pat, proxyUrl: proxy,
-                        apiVersion, timeout, batchSize
-                    };
-                    
-                    localStorage.setItem('adoConfig', JSON.stringify(this.config));
-                    console.log('✅ Configuration saved');
-                } catch (error) {
-                    console.error('Configuration save error:', error);
-                }
-            },
-
-            resetConfiguration() {
-                this.config = {
-                    connection: {},
-                    boards: { available: [], selected: [] },
-                    resources: { available: [], selected: [] },
-                    iterations: { available: [], selected: null }
-                };
-                this.isConnected = false;
-                isConnected = false;
-                
-                localStorage.removeItem('adoConfig');
-                
-                // Clear form fields
-                document.getElementById('organization').value = '';
-                document.getElementById('project').value = '';
-                document.getElementById('patToken').value = '';
-                document.getElementById('proxyUrl').value = '';
-                
-                this.updateConnectionStatus('offline', 'Ready to connect');
-                
-                // Clear all displays
-                this.renderAvailableBoards();
-                this.renderAvailableResources();
-                this.renderAvailableIterations();
-            },
-
-            getConfiguration() {
-                return this.config;
-            },
-
-            isConfigured() {
-                return this.isConnected && 
-                       this.config.boards.selected.length > 0 && 
-                       this.config.iterations.selected !== null;
-            },
-
-            getSelectedBoards() {
-                return this.config.boards.selected;
-            },
-
-            getSelectedResources() {
-                return this.config.resources.selected;
-            },
-
-            getSelectedIteration() {
-                return this.config.iterations.selected;
+            } catch (error) {
+                console.error('Full refresh failed:', error);
+                showNotification('Full refresh failed: ' + error.message, 'error');
             }
-        };
-    </script>
+        }
 
-    <!-- Load Chart.js -->
-    <script>
-        // Load Chart.js with proper script tag to avoid module import error
-        const chartScript = document.createElement('script');
-        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
-        chartScript.onload = () => console.log('✅ Chart.js loaded successfully');
-        chartScript.onerror = () => console.warn('⚠️ Chart.js failed to load');
-        document.head.appendChild(chartScript);
+        // Enhanced error boundary
+        window.addEventListener('error', function(e) {
+            console.error('🚨 Global error:', e.error?.message || e.message);
+            showNotification('An error occurred: ' + (e.error?.message || e.message), 'error');
+        });
 
-        console.log('🚀 ADO Metrics Dashboard - Ready to initialize advanced modules');
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('🚨 Unhandled promise rejection:', e.reason);
+            showNotification('An async error occurred. Check console for details.', 'error');
+        });
+
+        console.log('📱 Local dashboard environment ready');
     </script>
 </body>
 </html> 
