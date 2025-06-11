@@ -1155,6 +1155,7 @@
                     console.log('WIQL Query with date range:', query);
                     console.log('Date range:', dateRange);
                     console.log('Selected area path:', this.selectedAreaPath);
+                    console.log('Area path filter used:', areaPathFilter);
 
                     const wiql = { query };
                     const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
@@ -1281,18 +1282,18 @@
                 const extractRecursive = (node, parentPath = '') => {
                     if (node.children && node.children.length > 0) {
                         node.children.forEach(child => {
-                            const currentPath = parentPath ? `${parentPath}\\${child.name}` : child.name;
+                            const currentPath = parentPath ? `${parentPath}\\\\${child.name}` : child.name;
 
                             if (child.children && child.children.length > 0) {
                                 // Show the parent team name (child) in dropdown, but store all sub-areas for filtering
                                 child.children.forEach(grandChild => {
-                                    const fullPath = `${currentPath}\\${grandChild.name}`;
+                                    const fullPath = `${currentPath}\\\\${grandChild.name}`;
                                     paths.push({
                                         id: grandChild.id,
                                         name: grandChild.name,
-                                        fullPath: `${response.name}\\Area\\${fullPath}`,
+                                        fullPath: `${response.name}\\\\${fullPath}`, // Remove "Area" and use double backslashes
                                         displayName: child.name, // Show parent team name
-                                        parentPath: `${response.name}\\Area\\${currentPath}`, // Store parent path for filtering
+                                        parentPath: `${response.name}\\\\${currentPath}`, // Remove "Area" and use double backslashes
                                         leafName: grandChild.name
                                     });
                                 });
@@ -1300,9 +1301,9 @@
                                 paths.push({
                                     id: child.id,
                                     name: child.name,
-                                    fullPath: `${response.name}\\Area\\${currentPath}`,
+                                    fullPath: `${response.name}\\\\${currentPath}`, // Remove "Area" and use double backslashes
                                     displayName: child.name,
-                                    parentPath: `${response.name}\\Area\\${currentPath}`,
+                                    parentPath: `${response.name}\\\\${currentPath}`, // Remove "Area" and use double backslashes
                                     leafName: child.name
                                 });
                             }
@@ -1347,13 +1348,14 @@
                         // Single sub-area, use exact match
                         return `[System.AreaPath] = '${this.selectedAreaPath.subAreas[0].fullPath}'`;
                     } else {
-                        // Fallback to exact path match or LIKE if path contains team name
+                        // Fallback to exact path match
                         const pathToUse = this.selectedAreaPath.parentPath || this.selectedAreaPath.fullPath;
                         return `[System.AreaPath] = '${pathToUse}'`;
                     }
                 } catch (error) {
                     console.error('Error building area path filter:', error);
-                    // Ultimate fallback - use LIKE with the display name
+                    console.error('Selected area path object:', this.selectedAreaPath);
+                    // Ultimate fallback - use CONTAINS with the display name
                     return `[System.AreaPath] CONTAINS '${this.selectedAreaPath.displayName || this.selectedAreaPath.name}'`;
                 }
             }
@@ -1361,6 +1363,8 @@
             populateAreaPathDropdown() {
                 const dropdown = document.getElementById('areaPathDropdown');
                 dropdown.innerHTML = '';
+
+                console.log('Available area paths:', this.areaPaths);
 
                 this.areaPaths.forEach(areaPath => {
                     const div = document.createElement('div');
@@ -1404,10 +1408,18 @@
                                     if (grandChild.children && grandChild.children.length > 0) {
                                         grandChild.children.forEach(iteration => {
                                             if (iteration.attributes && iteration.attributes.startDate) {
+                                                // Fix path format: remove leading slash and "Iteration" text, use double backslashes
+                                                let cleanPath = iteration.path;
+                                                if (cleanPath.startsWith('\\')) {
+                                                    cleanPath = cleanPath.substring(1);
+                                                }
+                                                // Remove "\\Iteration" part and replace single backslashes with double
+                                                cleanPath = cleanPath.replace(/\\Iteration\\/g, '\\\\').replace(/\\/g, '\\\\');
+                                                
                                                 iterations.push({
                                                     id: iteration.id,
                                                     name: iteration.name,
-                                                    fullPath: iteration.path,
+                                                    fullPath: cleanPath,
                                                     startDate: new Date(iteration.attributes.startDate),
                                                     finishDate: new Date(iteration.attributes.finishDate),
                                                     displayName: iteration.name
@@ -1426,6 +1438,7 @@
                 // Sort by start date (latest first)
                 iterations.sort((a, b) => b.startDate - a.startDate);
 
+                console.log('Extracted iterations:', iterations);
                 return iterations;
             }
 
@@ -2077,6 +2090,7 @@
 
                     console.log('WIQL Query:', query);
                     console.log('Selected area path:', this.selectedAreaPath);
+                    console.log('Area path filter used:', areaPathFilter);
 
                     const wiql = { query };
                     const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
