@@ -669,7 +669,7 @@
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" data-page="individual">
-                        <i class="fas fa-user-chart"></i>
+                        <i class="fas fa-user-check"></i>
                         <span>Individual Metrics</span>
                     </a>
                 </li>
@@ -1122,7 +1122,16 @@
 
                     // Add area path filter
                     if (this.selectedAreaPath) {
-                        whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.fullPath}'`);
+                        if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length > 1) {
+                            // Multiple sub-areas under this team, use UNDER parent path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
+                        } else if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length === 1) {
+                            // Single sub-area, use specific path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.subAreas[0].fullPath}'`);
+                        } else {
+                            // Fallback to parent path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
+                        }
                     }
 
                     // Add iteration filter (only if not using custom date range)
@@ -1282,13 +1291,16 @@
                             const currentPath = parentPath ? `${parentPath}\\${child.name}` : child.name;
 
                             if (child.children && child.children.length > 0) {
+                                // Show the parent team name (child) in dropdown, but store all sub-areas for filtering
                                 child.children.forEach(grandChild => {
                                     const fullPath = `${currentPath}\\${grandChild.name}`;
                                     paths.push({
                                         id: grandChild.id,
                                         name: grandChild.name,
                                         fullPath: `${response.name}\\Area\\${fullPath}`,
-                                        displayName: grandChild.name
+                                        displayName: child.name, // Show parent team name
+                                        parentPath: `${response.name}\\Area\\${currentPath}`, // Store parent path for filtering
+                                        leafName: grandChild.name
                                     });
                                 });
                             } else {
@@ -1296,7 +1308,9 @@
                                     id: child.id,
                                     name: child.name,
                                     fullPath: `${response.name}\\Area\\${currentPath}`,
-                                    displayName: child.name
+                                    displayName: child.name,
+                                    parentPath: `${response.name}\\Area\\${currentPath}`,
+                                    leafName: child.name
                                 });
                             }
                         });
@@ -1304,7 +1318,26 @@
                 };
 
                 extractRecursive(response);
-                return paths;
+                
+                // Group by displayName to avoid duplicates and combine all paths under same team
+                const groupedPaths = new Map();
+                paths.forEach(path => {
+                    if (!groupedPaths.has(path.displayName)) {
+                        groupedPaths.set(path.displayName, {
+                            id: path.id,
+                            name: path.name,
+                            displayName: path.displayName,
+                            parentPath: path.parentPath,
+                            subAreas: []
+                        });
+                    }
+                    groupedPaths.get(path.displayName).subAreas.push({
+                        name: path.leafName,
+                        fullPath: path.fullPath
+                    });
+                });
+
+                return Array.from(groupedPaths.values());
             }
 
             populateAreaPathDropdown() {
@@ -1437,9 +1470,20 @@
                 const select = document.getElementById('testPlanSelect');
                 select.innerHTML = '<option value="">No test plan selected</option>';
 
-                const filteredPlans = this.testPlans.filter(plan =>
-                    plan.areaPath && plan.areaPath.includes(this.selectedAreaPath.name)
-                );
+                const filteredPlans = this.testPlans.filter(plan => {
+                    if (!plan.areaPath) return false;
+                    
+                    // Check if test plan area path matches any of the sub-areas under selected team
+                    if (this.selectedAreaPath.subAreas) {
+                        return this.selectedAreaPath.subAreas.some(subArea => 
+                            plan.areaPath.includes(subArea.name) || 
+                            plan.areaPath.includes(this.selectedAreaPath.displayName)
+                        );
+                    }
+                    
+                    return plan.areaPath.includes(this.selectedAreaPath.displayName) || 
+                           plan.areaPath.includes(this.selectedAreaPath.name);
+                });
 
                 filteredPlans.forEach(plan => {
                     const option = document.createElement('option');
@@ -1447,6 +1491,15 @@
                     option.textContent = plan.name;
                     select.appendChild(option);
                 });
+
+                // Show message if test plans are now filtered
+                if (this.testPlans.length > 0 && filteredPlans.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = `No test plans found for ${this.selectedAreaPath.displayName}`;
+                    option.disabled = true;
+                    select.appendChild(option);
+                }
             }
 
             toggleDropdown(dropdownId) {
@@ -1986,7 +2039,16 @@
 
                     // Add area path filter
                     if (this.selectedAreaPath) {
-                        whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.fullPath}'`);
+                        if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length > 1) {
+                            // Multiple sub-areas under this team, use UNDER parent path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
+                        } else if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length === 1) {
+                            // Single sub-area, use specific path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.subAreas[0].fullPath}'`);
+                        } else {
+                            // Fallback to parent path
+                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
+                        }
                     }
 
                     // Add iteration filter
@@ -3429,7 +3491,7 @@
                         <div class="col-md-3">
                             <div class="metric-card">
                                 <div class="metric-icon">
-                                    <i class="fas fa-user-chart"></i>
+                                    <i class="fas fa-user-check"></i>
                                 </div>
                                 <div class="metric-value">${this.metrics.team.averageVelocity.toFixed(1)}</div>
                                 <div class="metric-label">Avg Velocity/Person</div>
