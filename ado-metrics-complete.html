@@ -1121,17 +1121,9 @@
                     let whereConditions = [`[System.TeamProject] = '${this.config.project}'`];
 
                     // Add area path filter
-                    if (this.selectedAreaPath) {
-                        if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length > 1) {
-                            // Multiple sub-areas under this team, use UNDER parent path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
-                        } else if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length === 1) {
-                            // Single sub-area, use specific path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.subAreas[0].fullPath}'`);
-                        } else {
-                            // Fallback to parent path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
-                        }
+                    const areaPathFilter = this.buildAreaPathFilter();
+                    if (areaPathFilter) {
+                        whereConditions.push(areaPathFilter);
                     }
 
                     // Add iteration filter (only if not using custom date range)
@@ -1162,6 +1154,7 @@
 
                     console.log('WIQL Query with date range:', query);
                     console.log('Date range:', dateRange);
+                    console.log('Selected area path:', this.selectedAreaPath);
 
                     const wiql = { query };
                     const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
@@ -1338,6 +1331,31 @@
                 });
 
                 return Array.from(groupedPaths.values());
+            }
+
+            buildAreaPathFilter() {
+                if (!this.selectedAreaPath) {
+                    return null;
+                }
+
+                try {
+                    if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length > 1) {
+                        // Multiple sub-areas under this team, use IN clause with all sub-area paths
+                        const subAreaPaths = this.selectedAreaPath.subAreas.map(sa => `'${sa.fullPath}'`).join(', ');
+                        return `[System.AreaPath] IN (${subAreaPaths})`;
+                    } else if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length === 1) {
+                        // Single sub-area, use exact match
+                        return `[System.AreaPath] = '${this.selectedAreaPath.subAreas[0].fullPath}'`;
+                    } else {
+                        // Fallback to exact path match or LIKE if path contains team name
+                        const pathToUse = this.selectedAreaPath.parentPath || this.selectedAreaPath.fullPath;
+                        return `[System.AreaPath] = '${pathToUse}'`;
+                    }
+                } catch (error) {
+                    console.error('Error building area path filter:', error);
+                    // Ultimate fallback - use LIKE with the display name
+                    return `[System.AreaPath] CONTAINS '${this.selectedAreaPath.displayName || this.selectedAreaPath.name}'`;
+                }
             }
 
             populateAreaPathDropdown() {
@@ -2038,17 +2056,9 @@
                     let whereConditions = [`[System.TeamProject] = '${this.config.project}'`];
 
                     // Add area path filter
-                    if (this.selectedAreaPath) {
-                        if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length > 1) {
-                            // Multiple sub-areas under this team, use UNDER parent path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
-                        } else if (this.selectedAreaPath.subAreas && this.selectedAreaPath.subAreas.length === 1) {
-                            // Single sub-area, use specific path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.subAreas[0].fullPath}'`);
-                        } else {
-                            // Fallback to parent path
-                            whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.parentPath}'`);
-                        }
+                    const areaPathFilter = this.buildAreaPathFilter();
+                    if (areaPathFilter) {
+                        whereConditions.push(areaPathFilter);
                     }
 
                     // Add iteration filter
@@ -2066,6 +2076,7 @@
                     const query = `SELECT [System.Id] FROM WorkItems WHERE ${whereConditions.join(' AND ')} ORDER BY [System.ChangedDate] DESC`;
 
                     console.log('WIQL Query:', query);
+                    console.log('Selected area path:', this.selectedAreaPath);
 
                     const wiql = { query };
                     const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
