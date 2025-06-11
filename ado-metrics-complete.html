@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADO Metrics Command Center</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -12,7 +13,7 @@
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
-    
+
     <style>
         :root {
             --primary-color: #94196B;
@@ -42,36 +43,55 @@
             background-color: var(--light-bg);
             color: var(--text-primary);
             min-height: 100vh;
-            font-size: 11px; /* Reduced global font size */
+            font-size: 11px;
+            /* Reduced global font size */
         }
 
         /* Global Font Size Reductions */
-        h1 { font-size: 1.5rem; }
-        h2 { font-size: 1.3rem; }
-        h3 { font-size: 1.1rem; }
-        h4 { font-size: 1rem; }
-        h5 { font-size: 0.9rem; }
-        h6 { font-size: 0.8rem; }
-        
-        .btn { 
-            font-size: 0.8rem; 
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+        }
+
+        h4 {
+            font-size: 1rem;
+        }
+
+        h5 {
+            font-size: 0.9rem;
+        }
+
+        h6 {
+            font-size: 0.8rem;
+        }
+
+        .btn {
+            font-size: 0.8rem;
             padding: 0.5rem 1rem;
         }
-        
-        .form-control, .form-select { 
+
+        .form-control,
+        .form-select {
             font-size: 0.8rem;
             padding: 0.5rem 0.75rem;
         }
-        
-        .table { 
-            font-size: 0.75rem; 
+
+        .table {
+            font-size: 0.75rem;
         }
-        
+
         .table th {
             font-size: 0.7rem;
             padding: 0.5rem;
         }
-        
+
         .table td {
             padding: 0.4rem;
         }
@@ -82,9 +102,11 @@
             top: 0;
             left: 0;
             height: 100vh;
-            width: 260px; /* Reduced width */
+            width: 260px;
+            /* Reduced width */
             background: var(--white-bg);
-            padding: 1.5rem 1rem; /* Reduced padding */
+            padding: 1.5rem 1rem;
+            /* Reduced padding */
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
@@ -94,13 +116,15 @@
         .sidebar-brand {
             display: flex;
             align-items: center;
-            margin-bottom: 2rem; /* Reduced margin */
+            margin-bottom: 2rem;
+            /* Reduced margin */
             padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border-color);
         }
 
         .sidebar-brand h1 {
-            font-size: 1.2rem; /* Reduced font size */
+            font-size: 1.2rem;
+            /* Reduced font size */
             font-weight: 800;
             color: var(--primary-color);
             margin: 0;
@@ -112,44 +136,54 @@
         }
 
         .nav-item {
-            margin-bottom: 0.3rem; /* Reduced margin */
+            margin-bottom: 0.3rem;
+            /* Reduced margin */
         }
 
         .nav-link {
             display: flex;
             align-items: center;
-            padding: 0.7rem 1rem; /* Reduced padding */
+            padding: 0.7rem 1rem;
+            /* Reduced padding */
             color: var(--text-secondary);
             text-decoration: none;
-            border-radius: 10px; /* Reduced border radius */
+            border-radius: 10px;
+            /* Reduced border radius */
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            font-size: 0.8rem; /* Reduced font size */
+            font-size: 0.8rem;
+            /* Reduced font size */
         }
 
         .nav-link:hover {
             color: var(--primary-color);
             background: var(--primary-ultra-light);
-            transform: translateX(3px); /* Reduced transform */
+            transform: translateX(3px);
+            /* Reduced transform */
         }
 
         .nav-link.active {
             color: var(--white-bg);
             background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            box-shadow: 0 3px 12px rgba(148, 25, 107, 0.3); /* Reduced shadow */
+            box-shadow: 0 3px 12px rgba(148, 25, 107, 0.3);
+            /* Reduced shadow */
         }
 
         .nav-link i {
-            width: 20px; /* Reduced icon width */
+            width: 20px;
+            /* Reduced icon width */
             margin-right: 0.8rem;
-            font-size: 0.9rem; /* Reduced icon size */
+            font-size: 0.9rem;
+            /* Reduced icon size */
         }
 
         /* Main Content */
         .main-content {
-            margin-left: 260px; /* Adjusted for reduced sidebar */
-            padding: 1.5rem; /* Reduced padding */
+            margin-left: 260px;
+            /* Adjusted for reduced sidebar */
+            padding: 1.5rem;
+            /* Reduced padding */
             min-height: 100vh;
             background-color: var(--light-bg);
         }
@@ -157,8 +191,10 @@
         /* Header */
         .page-header {
             background: var(--white-bg);
-            border-radius: 15px; /* Reduced border radius */
-            padding: 1.5rem; /* Reduced padding */
+            border-radius: 15px;
+            /* Reduced border radius */
+            padding: 1.5rem;
+            /* Reduced padding */
             margin-bottom: 1.5rem;
             box-shadow: var(--card-shadow);
             position: relative;
@@ -166,7 +202,8 @@
         }
 
         .page-title {
-            font-size: 1.8rem; /* Reduced font size */
+            font-size: 1.8rem;
+            /* Reduced font size */
             font-weight: 800;
             margin-bottom: 0.3rem;
             color: var(--primary-color);
@@ -185,11 +222,13 @@
             color: var(--text-secondary);
             font-weight: 600;
             margin-bottom: 0.3rem;
-            font-size: 0.75rem; /* Reduced font size */
+            font-size: 0.75rem;
+            /* Reduced font size */
         }
 
         /* Area Path and Iteration Selection */
-        .area-path-container, .iteration-container {
+        .area-path-container,
+        .iteration-container {
             position: relative;
         }
 
@@ -233,7 +272,8 @@
         .metric-card {
             background: var(--white-bg);
             border-radius: 15px;
-            padding: 1.2rem; /* Reduced padding */
+            padding: 1.2rem;
+            /* Reduced padding */
             height: 100%;
             box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
@@ -242,25 +282,30 @@
         }
 
         .metric-card:hover {
-            transform: translateY(-3px); /* Reduced transform */
-            box-shadow: 0 8px 25px rgba(148, 25, 107, 0.15); /* Reduced shadow */
+            transform: translateY(-3px);
+            /* Reduced transform */
+            box-shadow: 0 8px 25px rgba(148, 25, 107, 0.15);
+            /* Reduced shadow */
         }
 
         .metric-icon {
-            width: 45px; /* Reduced size */
+            width: 45px;
+            /* Reduced size */
             height: 45px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem; /* Reduced font size */
+            font-size: 1.2rem;
+            /* Reduced font size */
             margin-bottom: 0.8rem;
             background: var(--primary-ultra-light);
             color: var(--primary-color);
         }
 
         .metric-value {
-            font-size: 1.8rem; /* Reduced font size */
+            font-size: 1.8rem;
+            /* Reduced font size */
             font-weight: 800;
             margin-bottom: 0.3rem;
             color: var(--primary-color);
@@ -269,7 +314,8 @@
         .metric-label {
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 0.7rem; /* Reduced font size */
+            font-size: 0.7rem;
+            /* Reduced font size */
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -278,7 +324,8 @@
         .data-table-container {
             background: var(--white-bg);
             border-radius: 15px;
-            padding: 1.2rem; /* Reduced padding */
+            padding: 1.2rem;
+            /* Reduced padding */
             margin-bottom: 1.5rem;
             box-shadow: var(--card-shadow);
             overflow-x: auto;
@@ -296,10 +343,12 @@
             color: var(--primary-color);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.65rem; /* Reduced font size */
+            font-size: 0.65rem;
+            /* Reduced font size */
             letter-spacing: 0.5px;
             border: none;
-            padding: 0.6rem 0.4rem; /* Reduced padding */
+            padding: 0.6rem 0.4rem;
+            /* Reduced padding */
         }
 
         .table tbody tr {
@@ -308,22 +357,27 @@
 
         .table tbody tr:hover {
             background: var(--light-bg);
-            transform: scale(1.005); /* Reduced transform */
+            transform: scale(1.005);
+            /* Reduced transform */
         }
 
         .table tbody td {
-            padding: 0.5rem 0.4rem; /* Reduced padding */
+            padding: 0.5rem 0.4rem;
+            /* Reduced padding */
             border-color: var(--border-color);
             vertical-align: middle;
-            font-size: 0.7rem; /* Reduced font size */
+            font-size: 0.7rem;
+            /* Reduced font size */
         }
 
         /* Status Badges */
         .status-badge {
             display: inline-block;
-            padding: 0.2rem 0.5rem; /* Reduced padding */
+            padding: 0.2rem 0.5rem;
+            /* Reduced padding */
             border-radius: 15px;
-            font-size: 0.65rem; /* Reduced font size */
+            font-size: 0.65rem;
+            /* Reduced font size */
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -331,7 +385,8 @@
 
         /* Priority and Severity Indicators */
         .priority-indicator {
-            width: 6px; /* Reduced size */
+            width: 6px;
+            /* Reduced size */
             height: 6px;
             border-radius: 50%;
             display: inline-block;
@@ -339,7 +394,8 @@
         }
 
         .severity-badge {
-            font-size: 0.65rem; /* Reduced font size */
+            font-size: 0.65rem;
+            /* Reduced font size */
             padding: 0.15rem 0.4rem;
             border-radius: 10px;
             font-weight: 600;
@@ -347,7 +403,8 @@
 
         /* Progress Bars */
         .progress {
-            height: 6px; /* Reduced height */
+            height: 6px;
+            /* Reduced height */
             background: var(--light-bg);
             border-radius: 8px;
             overflow: hidden;
@@ -377,7 +434,8 @@
         }
 
         .spinner {
-            width: 50px; /* Reduced size */
+            width: 50px;
+            /* Reduced size */
             height: 50px;
             border: 3px solid var(--primary-ultra-light);
             border-top-color: var(--primary-color);
@@ -386,7 +444,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Section Headers */
@@ -394,13 +454,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem; /* Reduced margin */
+            margin-bottom: 1rem;
+            /* Reduced margin */
             padding-bottom: 0.8rem;
             border-bottom: 1px solid var(--border-color);
         }
 
         .section-title {
-            font-size: 1.2rem; /* Reduced font size */
+            font-size: 1.2rem;
+            /* Reduced font size */
             font-weight: 700;
             color: var(--primary-color);
         }
@@ -446,7 +508,8 @@
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
-                width: 240px; /* Reduced mobile width */
+                width: 240px;
+                /* Reduced mobile width */
             }
 
             .sidebar.active {
@@ -455,33 +518,41 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 1rem; /* Reduced mobile padding */
+                padding: 1rem;
+                /* Reduced mobile padding */
             }
 
             .page-title {
-                font-size: 1.4rem; /* Reduced mobile font size */
+                font-size: 1.4rem;
+                /* Reduced mobile font size */
             }
 
             .metric-value {
-                font-size: 1.5rem; /* Reduced mobile font size */
+                font-size: 1.5rem;
+                /* Reduced mobile font size */
             }
         }
 
         /* Test Tags */
         .test-tag {
             display: inline-block;
-            padding: 0.15rem 0.4rem; /* Reduced padding */
-            margin: 0.05rem; /* Reduced margin */
+            padding: 0.15rem 0.4rem;
+            /* Reduced padding */
+            margin: 0.05rem;
+            /* Reduced margin */
             border-radius: 12px;
-            font-size: 0.65rem; /* Reduced font size */
+            font-size: 0.65rem;
+            /* Reduced font size */
             font-weight: 600;
         }
 
         /* Environment Badge */
         .env-badge {
-            padding: 0.15rem 0.5rem; /* Reduced padding */
+            padding: 0.15rem 0.5rem;
+            /* Reduced padding */
             border-radius: 12px;
-            font-size: 0.65rem; /* Reduced font size */
+            font-size: 0.65rem;
+            /* Reduced font size */
             font-weight: 600;
         }
 
@@ -515,8 +586,33 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
+
+        #dateRangeContainer {
+            transition: all 0.3s ease;
+        }
+
+        #dateRangeContainer .alert {
+            border-radius: 8px;
+            border: 1px solid #bee5eb;
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        #customStartDate,
+        #customEndDate {
+            font-size: 0.8rem;
+        }
+
+        .date-range-info {
+            background: var(--primary-ultra-light);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
     </style>
 </head>
+
 <body>
     <!-- Connection Status -->
     <div id="connectionStatus" class="connection-status disconnected">
@@ -538,7 +634,7 @@
             <i class="fas fa-chart-line fa-2x" style="color: var(--primary-color);"></i>
             <h1>ADO Metrics</h1>
         </div>
-        
+
         <nav>
             <ul class="nav-menu">
                 <li class="nav-item">
@@ -600,7 +696,8 @@
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="page-title">ADO Metrics Command Center</h1>
-                    <p class="text-secondary mb-0" style="font-size: 0.8rem;">Real-time project analytics and insights</p>
+                    <p class="text-secondary mb-0" style="font-size: 0.8rem;">Real-time project analytics and insights
+                    </p>
                 </div>
                 <div class="col-md-4 text-end">
                     <button class="btn btn-primary" id="exportButton">
@@ -619,8 +716,8 @@
                 <div class="col-md-3">
                     <label class="form-label">Area Path</label>
                     <div class="area-path-container">
-                        <input type="text" class="form-control" id="areaPathInput" 
-                               placeholder="Select area path..." readonly>
+                        <input type="text" class="form-control" id="areaPathInput" placeholder="Select area path..."
+                            readonly>
                         <div class="dropdown-menu-custom" id="areaPathDropdown">
                             <!-- Area path options will be populated here -->
                         </div>
@@ -629,8 +726,8 @@
                 <div class="col-md-3">
                     <label class="form-label">Iteration</label>
                     <div class="iteration-container">
-                        <input type="text" class="form-control" id="iterationInput" 
-                               placeholder="Select iteration..." readonly>
+                        <input type="text" class="form-control" id="iterationInput" placeholder="Select iteration..."
+                            readonly>
                         <div class="dropdown-menu-custom" id="iterationDropdown">
                             <!-- Iteration options will be populated here -->
                         </div>
@@ -650,6 +747,10 @@
                         <option value="last90">Last 90 Days</option>
                         <option value="custom">Custom Range</option>
                     </select>
+                </div>
+                <!-- Date range container will be dynamically added here -->
+                <div class="col-12" id="dateRangeContainer">
+                    <!-- Dynamic date range fields will appear here -->
                 </div>
                 <div class="col-12 mt-3">
                     <button class="btn btn-primary" id="loadDataButton">
@@ -681,7 +782,8 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Organization</label>
-                            <input type="text" class="form-control" id="adoOrganization" placeholder="your-organization">
+                            <input type="text" class="form-control" id="adoOrganization"
+                                placeholder="your-organization">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Project</label>
@@ -753,7 +855,7 @@
                 this.loadSavedSettings();
                 this.updateConnectionStatus('disconnected');
                 this.showInitialState();
-                
+
                 // Auto-load if settings are configured
                 if (this.config.organization && this.config.project && this.config.pat) {
                     this.testConnection();
@@ -824,6 +926,10 @@
                     this.saveSettings();
                 });
 
+                document.getElementById('dataRangeSelect').addEventListener('change', (e) => {
+                    this.updateDateRangeOptions(e.target.value);
+                });
+
                 // Close dropdowns when clicking outside
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.area-path-container')) {
@@ -839,9 +945,9 @@
                 this.connectionStatus = status;
                 const statusElement = document.getElementById('connectionStatus');
                 const textElement = document.getElementById('connectionText');
-                
+
                 statusElement.className = `connection-status ${status}`;
-                
+
                 switch (status) {
                     case 'connected':
                         textElement.innerHTML = '<i class="fas fa-check-circle me-1"></i>Connected';
@@ -854,9 +960,229 @@
                         textElement.innerHTML = '<i class="fas fa-times-circle me-1"></i>Disconnected';
                         break;
                 }
-                
+
                 if (message) {
                     setTimeout(() => this.showToast(message, status === 'connected' ? 'success' : 'error'), 500);
+                }
+            }
+
+            updateDateRangeOptions(rangeType) {
+                // Find or create the date range container
+                let dateRangeContainer = document.getElementById('dateRangeContainer');
+
+                if (!dateRangeContainer) {
+                    // Create the container if it doesn't exist
+                    const configPanel = document.querySelector('.config-panel .row');
+                    const newCol = document.createElement('div');
+                    newCol.className = 'col-md-12 mt-3';
+                    newCol.id = 'dateRangeContainer';
+                    configPanel.appendChild(newCol);
+                    dateRangeContainer = newCol;
+                }
+
+                // Clear existing content
+                dateRangeContainer.innerHTML = '';
+
+                if (rangeType === 'custom') {
+                    dateRangeContainer.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="customStartDate" 
+                           value="${this.getDefaultStartDate()}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="customEndDate" 
+                           value="${this.getDefaultEndDate()}">
+                </div>
+            </div>
+        `;
+                } else {
+                    // Show the selected range info for other options
+                    const rangeInfo = this.getDateRangeInfo(rangeType);
+                    if (rangeInfo) {
+                        dateRangeContainer.innerHTML = `
+                <div class="alert alert-info" style="margin-bottom: 0; padding: 0.75rem; font-size: 0.8rem;">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <strong>${rangeInfo.label}:</strong> ${rangeInfo.description}
+                </div>
+            `;
+                    }
+                }
+            }
+
+
+            getDefaultStartDate() {
+                const date = new Date();
+                date.setMonth(date.getMonth() - 1); // 1 month ago
+                return date.toISOString().split('T')[0];
+            }
+
+            getDefaultEndDate() {
+                const date = new Date();
+                return date.toISOString().split('T')[0];
+            }
+
+            getDateRangeInfo(rangeType) {
+                const endDate = new Date();
+                let startDate = new Date();
+
+                switch (rangeType) {
+                    case 'current':
+                        return {
+                            label: 'Current Period',
+                            description: 'Based on selected iteration or last 30 days if no iteration selected'
+                        };
+                    case 'last30':
+                        startDate.setDate(endDate.getDate() - 30);
+                        return {
+                            label: 'Last 30 Days',
+                            description: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+                        };
+                    case 'last90':
+                        startDate.setDate(endDate.getDate() - 90);
+                        return {
+                            label: 'Last 90 Days',
+                            description: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+                        };
+                    default:
+                        return null;
+                }
+            }
+
+            getSelectedDateRange() {
+                const rangeType = document.getElementById('dataRangeSelect').value;
+                const endDate = new Date();
+                let startDate = new Date();
+
+                switch (rangeType) {
+                    case 'current':
+                        // Use iteration dates if available, otherwise last 30 days
+                        if (this.selectedIteration && this.selectedIteration.startDate) {
+                            return {
+                                start: this.selectedIteration.startDate,
+                                end: this.selectedIteration.finishDate || endDate,
+                                type: 'iteration'
+                            };
+                        } else {
+                            startDate.setDate(endDate.getDate() - 30);
+                            return {
+                                start: startDate,
+                                end: endDate,
+                                type: 'relative'
+                            };
+                        }
+
+                    case 'last30':
+                        startDate.setDate(endDate.getDate() - 30);
+                        return {
+                            start: startDate,
+                            end: endDate,
+                            type: 'relative'
+                        };
+
+                    case 'last90':
+                        startDate.setDate(endDate.getDate() - 90);
+                        return {
+                            start: startDate,
+                            end: endDate,
+                            type: 'relative'
+                        };
+
+                    case 'custom':
+                        const customStart = document.getElementById('customStartDate')?.value;
+                        const customEnd = document.getElementById('customEndDate')?.value;
+
+                        if (!customStart || !customEnd) {
+                            throw new Error('Please select both start and end dates for custom range');
+                        }
+
+                        return {
+                            start: new Date(customStart),
+                            end: new Date(customEnd),
+                            type: 'custom'
+                        };
+
+                    default:
+                        startDate.setDate(endDate.getDate() - 30);
+                        return {
+                            start: startDate,
+                            end: endDate,
+                            type: 'default'
+                        };
+                }
+            }
+
+            // Add enhanced work items loading with date range:
+            async loadWorkItemsWithDateRange(dateRange) {
+                try {
+                    // Build WIQL query
+                    let whereConditions = [`[System.TeamProject] = '${this.config.project}'`];
+
+                    // Add area path filter
+                    if (this.selectedAreaPath) {
+                        whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.fullPath}'`);
+                    }
+
+                    // Add iteration filter (only if not using custom date range)
+                    if (dateRange.type !== 'custom' && dateRange.type !== 'relative') {
+                        if (this.selectedIteration) {
+                            if (this.selectedIteration.fullPath === '@currentIteration') {
+                                whereConditions.push(`[System.IterationPath] UNDER @currentIteration`);
+                            } else {
+                                whereConditions.push(`[System.IterationPath] = '${this.selectedIteration.fullPath}'`);
+                            }
+                        }
+                    }
+
+                    // Add date range filter
+                    if (dateRange.type === 'custom' || dateRange.type === 'relative') {
+                        const startDateStr = dateRange.start.toISOString().split('T')[0];
+                        const endDateStr = dateRange.end.toISOString().split('T')[0];
+
+                        // Use changed date for broader coverage
+                        whereConditions.push(`[System.ChangedDate] >= '${startDateStr}'`);
+                        whereConditions.push(`[System.ChangedDate] <= '${endDateStr}T23:59:59.999Z'`);
+                    }
+
+                    // Add work item type filter
+                    whereConditions.push(`[System.WorkItemType] IN ('User Story', 'Bug', 'Task', 'Feature', 'Epic', 'Product Backlog Item', 'Test Case')`);
+
+                    const query = `SELECT [System.Id] FROM WorkItems WHERE ${whereConditions.join(' AND ')} ORDER BY [System.ChangedDate] DESC`;
+
+                    console.log('WIQL Query with date range:', query);
+                    console.log('Date range:', dateRange);
+
+                    const wiql = { query };
+                    const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
+
+                    if (!queryResult.workItems || queryResult.workItems.length === 0) {
+                        return [];
+                    }
+
+                    // Get work item details in batches
+                    const allWorkItems = [];
+                    const batchSize = 200;
+
+                    for (let i = 0; i < queryResult.workItems.length; i += batchSize) {
+                        const batch = queryResult.workItems.slice(i, i + batchSize);
+                        const ids = batch.map(wi => wi.id).join(',');
+
+                        try {
+                            const workItemsResponse = await this.makeADORequest(
+                                `wit/workitems?ids=${ids}&$expand=relations&api-version=7.0`
+                            );
+                            allWorkItems.push(...(workItemsResponse.value || []));
+                        } catch (error) {
+                            console.error('Error fetching work item batch:', error);
+                        }
+                    }
+
+                    return allWorkItems;
+                } catch (error) {
+                    console.error('Error in loadWorkItemsWithDateRange:', error);
+                    throw error;
                 }
             }
 
@@ -868,36 +1194,66 @@
                 }
 
                 this.updateConnectionStatus('testing');
-                
+
                 try {
-                    // Test basic connectivity with projects endpoint
-                    const response = await this.makeADORequest('projects?api-version=7.0');
-                    
-                    if (response && response.value) {
-                        this.updateConnectionStatus('connected', 'Successfully connected to ADO');
-                        await this.loadInitialData();
+                    // Test with organization-level projects endpoint first
+                    const projectsResponse = await this.makeADORequest('projects?api-version=7.0');
+
+                    if (projectsResponse && projectsResponse.value) {
+                        // Verify the specified project exists
+                        const projectExists = projectsResponse.value.some(p =>
+                            p.name.toLowerCase() === this.config.project.toLowerCase()
+                        );
+
+                        if (!projectExists) {
+                            throw new Error(`Project '${this.config.project}' not found in organization '${this.config.organization}'`);
+                        }
+
+                        // Test project-level access with a simple endpoint
+                        try {
+                            await this.makeADORequest('wit/classificationnodes?api-version=7.0');
+                            this.updateConnectionStatus('connected', 'Successfully connected to ADO');
+                            await this.loadInitialData();
+                        } catch (projectError) {
+                            throw new Error(`Cannot access project '${this.config.project}': ${projectError.message}`);
+                        }
                     } else {
                         throw new Error('Invalid response from ADO');
                     }
                 } catch (error) {
                     console.error('Connection test failed:', error);
-                    this.updateConnectionStatus('disconnected', `Connection failed: ${error.message}`);
+                    let errorMessage = error.message;
+
+                    // Provide more helpful error messages
+                    if (error.message.includes('404')) {
+                        if (error.message.includes('projects')) {
+                            errorMessage = `Organization '${this.config.organization}' not found or PAT doesn't have access`;
+                        } else {
+                            errorMessage = `Project '${this.config.project}' not found or no access`;
+                        }
+                    } else if (error.message.includes('401')) {
+                        errorMessage = 'Invalid Personal Access Token or insufficient permissions';
+                    } else if (error.message.includes('403')) {
+                        errorMessage = 'Access denied. Check PAT permissions for the organization/project';
+                    }
+
+                    this.updateConnectionStatus('disconnected', `Connection failed: ${errorMessage}`);
                 }
             }
 
             async loadInitialData() {
                 try {
                     this.showLoading(true, 'Loading area paths and iterations...');
-                    
+
                     // Load area paths
                     await this.loadAreaPaths();
-                    
+
                     // Load iterations
                     await this.loadIterations();
-                    
+
                     // Load test plans
                     await this.loadTestPlans();
-                    
+
                     this.showLoading(false);
                 } catch (error) {
                     console.error('Error loading initial data:', error);
@@ -919,12 +1275,12 @@
 
             extractAreaPaths(response) {
                 const paths = [];
-                
+
                 const extractRecursive = (node, parentPath = '') => {
                     if (node.children && node.children.length > 0) {
                         node.children.forEach(child => {
                             const currentPath = parentPath ? `${parentPath}\\${child.name}` : child.name;
-                            
+
                             if (child.children && child.children.length > 0) {
                                 child.children.forEach(grandChild => {
                                     const fullPath = `${currentPath}\\${grandChild.name}`;
@@ -946,7 +1302,7 @@
                         });
                     }
                 };
-                
+
                 extractRecursive(response);
                 return paths;
             }
@@ -954,7 +1310,7 @@
             populateAreaPathDropdown() {
                 const dropdown = document.getElementById('areaPathDropdown');
                 dropdown.innerHTML = '';
-                
+
                 this.areaPaths.forEach(areaPath => {
                     const div = document.createElement('div');
                     div.className = 'dropdown-option';
@@ -970,7 +1326,7 @@
                 this.selectedAreaPath = areaPath;
                 document.getElementById('areaPathInput').value = areaPath.displayName;
                 document.getElementById('areaPathDropdown').classList.remove('show');
-                
+
                 // Filter test plans by area path
                 this.filterTestPlansByAreaPath();
             }
@@ -988,7 +1344,7 @@
 
             extractIterations(response) {
                 const iterations = [];
-                
+
                 const extractRecursive = (node, parentPath = '') => {
                     if (node.children && node.children.length > 0) {
                         node.children.forEach(child => {
@@ -1013,19 +1369,19 @@
                         });
                     }
                 };
-                
+
                 extractRecursive(response);
-                
+
                 // Sort by start date (latest first)
                 iterations.sort((a, b) => b.startDate - a.startDate);
-                
+
                 return iterations;
             }
 
             populateIterationDropdown() {
                 const dropdown = document.getElementById('iterationDropdown');
                 dropdown.innerHTML = '';
-                
+
                 // Add current iteration option
                 const currentDiv = document.createElement('div');
                 currentDiv.className = 'dropdown-option';
@@ -1034,7 +1390,7 @@
                     this.selectIteration({ name: '@currentIteration', displayName: 'Current Iteration', fullPath: '@currentIteration' });
                 });
                 dropdown.appendChild(currentDiv);
-                
+
                 this.iterations.forEach(iteration => {
                     const div = document.createElement('div');
                     div.className = 'dropdown-option';
@@ -1066,7 +1422,7 @@
             populateTestPlansDropdown() {
                 const select = document.getElementById('testPlanSelect');
                 select.innerHTML = '<option value="">No test plan selected</option>';
-                
+
                 this.testPlans.forEach(plan => {
                     const option = document.createElement('option');
                     option.value = plan.id;
@@ -1077,14 +1433,14 @@
 
             filterTestPlansByAreaPath() {
                 if (!this.selectedAreaPath) return;
-                
+
                 const select = document.getElementById('testPlanSelect');
                 select.innerHTML = '<option value="">No test plan selected</option>';
-                
-                const filteredPlans = this.testPlans.filter(plan => 
+
+                const filteredPlans = this.testPlans.filter(plan =>
                     plan.areaPath && plan.areaPath.includes(this.selectedAreaPath.name)
                 );
-                
+
                 filteredPlans.forEach(plan => {
                     const option = document.createElement('option');
                     option.value = plan.id;
@@ -1099,8 +1455,17 @@
 
             async makeADORequest(endpoint, method = 'GET', body = null) {
                 const baseUrl = `https://dev.azure.com/${this.config.organization}`;
-                const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${this.config.project}/_apis/${endpoint}`;
-                
+
+                // Determine if this is an organization-level or project-level endpoint
+                let url;
+                if (endpoint.includes('projects') && !endpoint.includes(this.config.project)) {
+                    // Organization-level endpoints (like projects list)
+                    url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/_apis/${endpoint}`;
+                } else {
+                    // Project-level endpoints
+                    url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${this.config.project}/_apis/${endpoint}`;
+                }
+
                 const headers = {
                     'Authorization': `Basic ${btoa(`:${this.config.pat}`)}`,
                     'Content-Type': 'application/json',
@@ -1108,12 +1473,14 @@
                 };
 
                 try {
+                    console.log('Making request to:', url); // Debug log
+
                     const response = await fetch(url, {
                         method,
                         headers,
                         body: body ? JSON.stringify(body) : null
                     });
-                    
+
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error(`ADO API Error: ${response.status} - ${errorText}`);
@@ -1139,11 +1506,14 @@
                 }
 
                 this.showLoading(true, 'Loading work items...');
-                
+
                 try {
+                    // Get date range based on selection
+                    const dateRange = this.getSelectedDateRange();
+
                     // Build WIQL query with proper filtering
-                    const workItems = await this.loadWorkItems();
-                    
+                    const workItems = await this.loadWorkItemsWithDateRange(dateRange);
+
                     if (workItems.length === 0) {
                         this.showToast('No work items found for the selected criteria', 'info');
                         this.showNoDataMessage();
@@ -1152,16 +1522,16 @@
 
                     // Process and categorize work items
                     this.currentData = await this.processWorkItems(workItems);
-                    
+
                     // Calculate all metrics
                     this.calculateAllMetrics();
-                    
+
                     // Update current page
                     const activePage = document.querySelector('.nav-link.active')?.dataset.page || 'dashboard';
                     this.navigateToPage(activePage);
-                    
+
                     this.showToast(`Loaded ${workItems.length} work items successfully`, 'success');
-                    
+
                 } catch (error) {
                     console.error('Error loading data:', error);
                     this.showToast(`Error loading data: ${error.message}`, 'error');
@@ -1170,16 +1540,455 @@
                 }
             }
 
+            calculateSprintVelocity() {
+                const stories = this.currentData.userStories || [];
+                const iterations = new Map();
+
+                // Group stories by iteration and calculate real velocity
+                stories.forEach(story => {
+                    const iterationPath = story.fields['System.IterationPath'];
+                    const state = story.fields['System.State'];
+                    const storyPoints = story.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0;
+                    const createdDate = new Date(story.fields['System.CreatedDate']);
+                    const changedDate = new Date(story.fields['System.ChangedDate']);
+                    const completedDate = story.fields['Microsoft.VSTS.Common.ClosedDate'] ?
+                        new Date(story.fields['Microsoft.VSTS.Common.ClosedDate']) : null;
+
+                    if (!iterations.has(iterationPath)) {
+                        iterations.set(iterationPath, {
+                            name: iterationPath,
+                            plannedPoints: 0,
+                            completedPoints: 0,
+                            plannedStories: 0,
+                            completedStories: 0,
+                            carryOverPoints: 0,
+                            addedMidIterationPoints: 0,
+                            scopeChangeCount: 0,
+                            averageCycleTime: 0,
+                            stories: []
+                        });
+                    }
+
+                    const iteration = iterations.get(iterationPath);
+                    iteration.stories.push(story);
+                    iteration.plannedPoints += storyPoints;
+                    iteration.plannedStories++;
+
+                    // Check if story was completed in this iteration
+                    if (['Done', 'Closed', 'Resolved'].includes(state)) {
+                        iteration.completedPoints += storyPoints;
+                        iteration.completedStories++;
+                    }
+
+                    // Calculate if story was added mid-iteration (simplified heuristic)
+                    if (this.selectedIteration && this.selectedIteration.startDate) {
+                        const iterationStart = new Date(this.selectedIteration.startDate);
+                        if (createdDate > iterationStart) {
+                            iteration.addedMidIterationPoints += storyPoints;
+                            iteration.scopeChangeCount++;
+                        }
+                    }
+                });
+
+                // Calculate velocity trends and predictability
+                const velocityHistory = Array.from(iterations.values())
+                    .filter(iter => iter.completedPoints > 0)
+                    .map(iter => iter.completedPoints)
+                    .slice(-6); // Last 6 iterations
+
+                const averageVelocity = velocityHistory.length > 0 ?
+                    velocityHistory.reduce((sum, v) => sum + v, 0) / velocityHistory.length : 0;
+
+                // Calculate velocity variance for predictability
+                const velocityVariance = velocityHistory.length > 1 ?
+                    velocityHistory.reduce((sum, v) => sum + Math.pow(v - averageVelocity, 2), 0) / velocityHistory.length : 0;
+
+                const velocityStdDev = Math.sqrt(velocityVariance);
+                const predictabilityScore = averageVelocity > 0 ?
+                    Math.max(0, 100 - (velocityStdDev / averageVelocity) * 100) : 0;
+
+                return {
+                    iterations,
+                    currentVelocity: Array.from(iterations.values())[0]?.completedPoints || 0,
+                    averageVelocity: Math.round(averageVelocity),
+                    velocityHistory,
+                    predictabilityScore: Math.round(predictabilityScore),
+                    velocityTrend: this.calculateVelocityTrend(velocityHistory),
+                    totalScopeChanges: Array.from(iterations.values()).reduce((sum, iter) => sum + iter.scopeChangeCount, 0)
+                };
+            }
+
+            calculateVelocityTrend(velocityHistory) {
+                if (!velocityHistory || velocityHistory.length < 3) {
+                    return 'insufficient-data';
+                }
+
+                // Use linear regression to determine trend
+                const n = velocityHistory.length;
+                const x = Array.from({ length: n }, (_, i) => i + 1);
+                const y = velocityHistory;
+
+                const sumX = x.reduce((a, b) => a + b, 0);
+                const sumY = y.reduce((a, b) => a + b, 0);
+                const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+                const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+
+                const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                const intercept = (sumY - slope * sumX) / n;
+
+                // Calculate R-squared for trend strength
+                const yMean = sumY / n;
+                const totalSumSquares = y.reduce((sum, yi) => sum + Math.pow(yi - yMean, 2), 0);
+                const residualSumSquares = y.reduce((sum, yi, i) => {
+                    const predicted = slope * x[i] + intercept;
+                    return sum + Math.pow(yi - predicted, 2);
+                }, 0);
+
+                const rSquared = totalSumSquares > 0 ? 1 - (residualSumSquares / totalSumSquares) : 0;
+
+                // Determine trend based on slope and strength
+                if (rSquared < 0.3) {
+                    return 'volatile'; // Low correlation, trend not reliable
+                } else if (slope > 2) {
+                    return 'strong-increasing';
+                } else if (slope > 0.5) {
+                    return 'increasing';
+                } else if (slope < -2) {
+                    return 'strong-decreasing';
+                } else if (slope < -0.5) {
+                    return 'decreasing';
+                } else {
+                    return 'stable';
+                }
+            }
+
+            // ADD these new helper methods that are referenced above:
+
+            calculateMedian(values) {
+                if (!values || values.length === 0) return 0;
+
+                const sorted = [...values].sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+
+                return sorted.length % 2 === 0 ?
+                    (sorted[mid - 1] + sorted[mid]) / 2 :
+                    sorted[mid];
+            }
+
+            createEmptyIndividualMetrics() {
+                return {
+                    workItems: {
+                        created: 0,
+                        assigned: 0,
+                        completed: 0,
+                        inProgress: 0
+                    },
+                    storyPoints: {
+                        assigned: 0,
+                        completed: 0,
+                        average: 0
+                    },
+                    workTypes: {
+                        stories: 0,
+                        features: 0,
+                        tasks: 0,
+                        bugs: 0,
+                        testCases: 0
+                    },
+                    quality: {
+                        bugsCreated: 0,
+                        bugsResolved: 0,
+                        defectsCreated: 0,
+                        testCasesCreated: 0,
+                        testCasesExecuted: 0
+                    },
+                    timing: {
+                        averageCycleTime: 0,
+                        averageLeadTime: 0
+                    },
+                    collaboration: {
+                        workItemsShared: 0,
+                        commentsGiven: 0,
+                        commentsReceived: 0
+                    },
+                    performanceScore: 0,
+                    qualityScore: 0,
+                    velocityTrend: 'stable',
+                    workloadBalance: 0
+                };
+            }
+
+            updateIndividualMetrics(metrics, item, role) {
+                const workItemType = item.fields['System.WorkItemType'];
+                const state = item.fields['System.State'];
+                const storyPoints = item.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0;
+
+                if (role === 'assignee') {
+                    metrics.workItems.assigned++;
+                    metrics.storyPoints.assigned += storyPoints;
+
+                    if (['Done', 'Closed', 'Resolved'].includes(state)) {
+                        metrics.workItems.completed++;
+                        metrics.storyPoints.completed += storyPoints;
+                    } else if (['Active', 'In Progress'].includes(state)) {
+                        metrics.workItems.inProgress++;
+                    }
+                } else if (role === 'creator') {
+                    metrics.workItems.created++;
+                }
+
+                // Update work type counts
+                switch (workItemType) {
+                    case 'User Story':
+                    case 'Product Backlog Item':
+                        metrics.workTypes.stories++;
+                        break;
+                    case 'Feature':
+                        metrics.workTypes.features++;
+                        break;
+                    case 'Task':
+                        metrics.workTypes.tasks++;
+                        break;
+                    case 'Bug':
+                        if (role === 'creator') {
+                            if (this.isProductionIssue(item)) {
+                                metrics.quality.defectsCreated++;
+                            } else {
+                                metrics.quality.bugsCreated++;
+                            }
+                        } else if (role === 'assignee') {
+                            metrics.quality.bugsResolved++;
+                        }
+                        metrics.workTypes.bugs++;
+                        break;
+                    case 'Test Case':
+                        if (role === 'creator') {
+                            metrics.quality.testCasesCreated++;
+                        }
+                        if (role === 'assignee' && ['Closed', 'Resolved'].includes(state)) {
+                            metrics.quality.testCasesExecuted++;
+                        }
+                        metrics.workTypes.testCases++;
+                        break;
+                }
+            }
+
+            calculatePerformanceScore(metrics) {
+                let score = 0;
+                let maxScore = 0;
+
+                // Delivery performance (40% weight)
+                const deliveryWeight = 40;
+                if (metrics.workItems.assigned > 0) {
+                    const completionRate = (metrics.workItems.completed / metrics.workItems.assigned) * 100;
+                    score += (completionRate / 100) * deliveryWeight;
+                }
+                maxScore += deliveryWeight;
+
+                // Quality performance (30% weight)
+                const qualityWeight = 30;
+                const qualityFactor = Math.max(0, 1 - (metrics.quality.bugsCreated * 0.1) - (metrics.quality.defectsCreated * 0.3));
+                score += qualityFactor * qualityWeight;
+                maxScore += qualityWeight;
+
+                // Velocity performance (20% weight)
+                const velocityWeight = 20;
+                if (metrics.storyPoints.assigned > 0) {
+                    const velocityScore = Math.min(100, (metrics.storyPoints.completed / metrics.storyPoints.assigned) * 100);
+                    score += (velocityScore / 100) * velocityWeight;
+                }
+                maxScore += velocityWeight;
+
+                // Collaboration performance (10% weight)
+                const collaborationWeight = 10;
+                const collaborationScore = Math.min(100,
+                    (metrics.quality.testCasesCreated * 10) +
+                    (metrics.quality.bugsResolved * 5)
+                );
+                score += (collaborationScore / 100) * collaborationWeight;
+                maxScore += collaborationWeight;
+
+                return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+            }
+
+            calculateQualityScore(metrics) {
+                let score = 100; // Start with perfect score
+
+                // Penalize for bugs created
+                score -= metrics.quality.bugsCreated * 5;
+
+                // Heavy penalty for production defects
+                score -= metrics.quality.defectsCreated * 20;
+
+                // Reward for bugs resolved
+                score += metrics.quality.bugsResolved * 3;
+
+                // Reward for test cases created
+                score += metrics.quality.testCasesCreated * 2;
+
+                // Reward for test execution
+                score += metrics.quality.testCasesExecuted * 1;
+
+                return Math.max(0, Math.min(100, Math.round(score)));
+            }
+
+            calculateIndividualVelocityTrend(metrics) {
+                // Simplified trend calculation for individual
+                if (metrics.storyPoints.assigned === 0) return 'no-data';
+
+                const completionRate = (metrics.storyPoints.completed / metrics.storyPoints.assigned) * 100;
+
+                if (completionRate >= 90) return 'excellent';
+                if (completionRate >= 70) return 'good';
+                if (completionRate >= 50) return 'average';
+                return 'needs-improvement';
+            }
+
+            calculateWorkloadBalance(metrics) {
+                // Calculate individual workload balance
+                const totalWork = metrics.workItems.assigned;
+                const inProgress = metrics.workItems.inProgress;
+
+                if (totalWork === 0) return 100;
+
+                const wipRatio = inProgress / totalWork;
+
+                // Ideal WIP ratio is around 20-30%
+                if (wipRatio >= 0.2 && wipRatio <= 0.3) return 100;
+                if (wipRatio < 0.2) return 80; // Under-utilized
+                if (wipRatio > 0.5) return 40; // Overloaded
+                return 60;
+            }
+
+            calculateSkillCoverage(teamMap) {
+                const skills = {
+                    development: 0,
+                    testing: 0,
+                    bugFixing: 0,
+                    requirements: 0
+                };
+
+                teamMap.forEach(member => {
+                    if (member.stories > 0) skills.development++;
+                    if (member.testCasesCreated > 0 || member.testCasesExecuted > 0) skills.testing++;
+                    if (member.bugs > 0) skills.bugFixing++;
+                    if (member.stories > 0) skills.requirements++;
+                });
+
+                return skills;
+            }
+
+            calculateTeamWorkloadBalance(teamMap) {
+                const workloads = [];
+                teamMap.forEach(member => {
+                    workloads.push(member.workInProgress || 0);
+                });
+
+                if (workloads.length === 0) return 100;
+
+                const avg = workloads.reduce((a, b) => a + b, 0) / workloads.length;
+                if (avg === 0) return 100;
+
+                const variance = workloads.reduce((sum, load) => sum + Math.pow(load - avg, 2), 0) / workloads.length;
+                const stdDev = Math.sqrt(variance);
+
+                // Lower standard deviation means better balance
+                return Math.max(0, 100 - (stdDev / avg) * 100);
+            }
+
+            calculateCollaborationScore(individualMetrics) {
+                // Calculate team collaboration based on individual contributions
+                let totalCollaboration = 0;
+                let memberCount = 0;
+
+                individualMetrics.forEach(metrics => {
+                    const collabScore = (metrics.quality.testCasesCreated * 2) +
+                        (metrics.quality.bugsResolved * 3) +
+                        (metrics.collaboration.commentsGiven * 1);
+                    totalCollaboration += Math.min(100, collabScore);
+                    memberCount++;
+                });
+
+                return memberCount > 0 ? Math.round(totalCollaboration / memberCount) : 0;
+            }
+
+            calculateQualityTrend(issues) {
+                // Group issues by week for trending
+                const weeklyData = new Map();
+
+                issues.forEach(issue => {
+                    const createdDate = new Date(issue.fields['System.CreatedDate']);
+                    const weekStart = new Date(createdDate);
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week
+                    const weekKey = weekStart.toISOString().split('T')[0];
+
+                    if (!weeklyData.has(weekKey)) {
+                        weeklyData.set(weekKey, {
+                            bugs: 0,
+                            defects: 0,
+                            critical: 0,
+                            resolved: 0
+                        });
+                    }
+
+                    const weekData = weeklyData.get(weekKey);
+
+                    if (this.isProductionIssue(issue)) {
+                        weekData.defects++;
+                    } else {
+                        weekData.bugs++;
+                    }
+
+                    const severity = issue.fields['Microsoft.VSTS.Common.Severity'] || '';
+                    if (severity.includes('1') || severity.toLowerCase().includes('critical')) {
+                        weekData.critical++;
+                    }
+
+                    if (['Resolved', 'Closed'].includes(issue.fields['System.State'])) {
+                        weekData.resolved++;
+                    }
+                });
+
+                // Convert to array and sort by date
+                const trendData = Array.from(weeklyData.entries())
+                    .map(([week, data]) => ({ week, ...data }))
+                    .sort((a, b) => new Date(a.week) - new Date(b.week))
+                    .slice(-12); // Last 12 weeks
+
+                // Calculate trend direction
+                const recentWeeks = trendData.slice(-4);
+                const olderWeeks = trendData.slice(-8, -4);
+
+                const recentAverage = recentWeeks.length > 0 ?
+                    recentWeeks.reduce((sum, week) => sum + week.bugs + week.defects, 0) / recentWeeks.length : 0;
+                const olderAverage = olderWeeks.length > 0 ?
+                    olderWeeks.reduce((sum, week) => sum + week.bugs + week.defects, 0) / olderWeeks.length : 0;
+
+                let trendDirection = 'stable';
+                if (recentAverage > olderAverage * 1.2) {
+                    trendDirection = 'worsening';
+                } else if (recentAverage < olderAverage * 0.8) {
+                    trendDirection = 'improving';
+                }
+
+                return {
+                    weeklyData: trendData,
+                    trendDirection,
+                    recentAverage: Math.round(recentAverage),
+                    changeFromPrevious: olderAverage > 0 ? ((recentAverage - olderAverage) / olderAverage) * 100 : 0
+                };
+            }
+
             async loadWorkItems() {
                 try {
                     // Build WIQL query
                     let whereConditions = [`[System.TeamProject] = '${this.config.project}'`];
-                    
+
                     // Add area path filter
                     if (this.selectedAreaPath) {
                         whereConditions.push(`[System.AreaPath] UNDER '${this.selectedAreaPath.fullPath}'`);
                     }
-                    
+
                     // Add iteration filter
                     if (this.selectedIteration) {
                         if (this.selectedIteration.fullPath === '@currentIteration') {
@@ -1188,7 +1997,7 @@
                             whereConditions.push(`[System.IterationPath] = '${this.selectedIteration.fullPath}'`);
                         }
                     }
-                    
+
                     // Add work item type filter
                     whereConditions.push(`[System.WorkItemType] IN ('User Story', 'Bug', 'Task', 'Feature', 'Epic', 'Product Backlog Item', 'Test Case')`);
 
@@ -1198,7 +2007,7 @@
 
                     const wiql = { query };
                     const queryResult = await this.makeADORequest('wit/wiql?$top=200&api-version=7.0', 'POST', wiql);
-                    
+
                     if (!queryResult.workItems || queryResult.workItems.length === 0) {
                         return [];
                     }
@@ -1206,11 +2015,11 @@
                     // Get work item details in batches
                     const allWorkItems = [];
                     const batchSize = 200;
-                    
+
                     for (let i = 0; i < queryResult.workItems.length; i += batchSize) {
                         const batch = queryResult.workItems.slice(i, i + batchSize);
                         const ids = batch.map(wi => wi.id).join(',');
-                        
+
                         try {
                             const workItemsResponse = await this.makeADORequest(
                                 `wit/workitems?ids=${ids}&$expand=relations&api-version=7.0`
@@ -1245,7 +2054,7 @@
                 for (const item of workItems) {
                     const type = item.fields['System.WorkItemType'];
                     const title = (item.fields['System.Title'] || '').toLowerCase();
-                    
+
                     switch (type) {
                         case 'User Story':
                         case 'Product Backlog Item':
@@ -1291,29 +2100,83 @@
 
             async loadTestPlanData(testPlanId) {
                 try {
-                    // Get test suites for the test plan
+                    const testPlanResults = {
+                        testCases: [],
+                        testSuites: [],
+                        testRuns: [],
+                        testResults: []
+                    };
+
+                    // Get test plan details
+                    const testPlan = await this.makeADORequest(`testplan/Plans/${testPlanId}?api-version=7.0`);
+
+                    // Get all test suites in the test plan
                     const suitesResponse = await this.makeADORequest(`testplan/Plans/${testPlanId}/suites?api-version=7.0`);
-                    
-                    const testCases = [];
-                    
-                    if (suitesResponse.value && suitesResponse.value.length > 0) {
-                        for (const suite of suitesResponse.value) {
-                            try {
-                                // Get test cases for each suite
-                                const testCasesResponse = await this.makeADORequest(
-                                    `testplan/Plans/${testPlanId}/Suites/${suite.id}/TestCase?api-version=7.0`
-                                );
-                                
-                                if (testCasesResponse.value) {
-                                    testCases.push(...testCasesResponse.value);
+                    testPlanResults.testSuites = suitesResponse.value || [];
+
+                    // Get test cases from all suites
+                    for (const suite of testPlanResults.testSuites) {
+                        try {
+                            // Get test cases in this suite
+                            const testCasesResponse = await this.makeADORequest(
+                                `testplan/Plans/${testPlanId}/Suites/${suite.id}/TestCase?api-version=7.0`
+                            );
+
+                            if (testCasesResponse.value) {
+                                // Get detailed test case information
+                                for (const testCaseRef of testCasesResponse.value) {
+                                    try {
+                                        const testCaseDetail = await this.makeADORequest(
+                                            `wit/workitems/${testCaseRef.workItem.id}?$expand=relations&api-version=7.0`
+                                        );
+
+                                        // Add suite information to test case
+                                        testCaseDetail.suiteId = suite.id;
+                                        testCaseDetail.suiteName = suite.name;
+                                        testCaseDetail.testPlanId = testPlanId;
+
+                                        testPlanResults.testCases.push(testCaseDetail);
+                                    } catch (tcError) {
+                                        console.warn(`Error loading test case ${testCaseRef.workItem.id}:`, tcError);
+                                    }
                                 }
-                            } catch (error) {
-                                console.warn(`Error loading test cases for suite ${suite.id}:`, error);
                             }
+                        } catch (suiteError) {
+                            console.warn(`Error loading test cases for suite ${suite.id}:`, suiteError);
                         }
                     }
-                    
-                    return { testCases };
+
+                    // Get test runs for this test plan
+                    try {
+                        const testRunsResponse = await this.makeADORequest(
+                            `test/runs?planId=${testPlanId}&api-version=7.0`
+                        );
+                        testPlanResults.testRuns = testRunsResponse.value || [];
+
+                        // Get test results for each run
+                        for (const testRun of testPlanResults.testRuns.slice(0, 10)) { // Limit to recent 10 runs
+                            try {
+                                const resultsResponse = await this.makeADORequest(
+                                    `test/Runs/${testRun.id}/results?api-version=7.0`
+                                );
+
+                                if (resultsResponse.value) {
+                                    testPlanResults.testResults.push(...resultsResponse.value.map(result => ({
+                                        ...result,
+                                        testRunId: testRun.id,
+                                        testRunName: testRun.name,
+                                        testPlanId: testPlanId
+                                    })));
+                                }
+                            } catch (resultError) {
+                                console.warn(`Error loading results for test run ${testRun.id}:`, resultError);
+                            }
+                        }
+                    } catch (runError) {
+                        console.warn(`Error loading test runs for plan ${testPlanId}:`, runError);
+                    }
+
+                    return testPlanResults;
                 } catch (error) {
                     console.error('Error loading test plan data:', error);
                     throw error;
@@ -1335,11 +2198,11 @@
                 const tags = (bug.fields['System.Tags'] || '').toLowerCase();
                 const areaPath = (bug.fields['System.AreaPath'] || '').toLowerCase();
                 const title = (bug.fields['System.Title'] || '').toLowerCase();
-                
-                return tags.includes('production') || tags.includes('prod') || 
-                       areaPath.includes('production') || areaPath.includes('prod') ||
-                       title.includes('production') || title.includes('prod') ||
-                       tags.includes('hotfix') || title.includes('hotfix');
+
+                return tags.includes('production') || tags.includes('prod') ||
+                    areaPath.includes('production') || areaPath.includes('prod') ||
+                    title.includes('production') || title.includes('prod') ||
+                    tags.includes('hotfix') || title.includes('hotfix');
             }
 
             calculateAllMetrics() {
@@ -1355,16 +2218,16 @@
                 const features = this.currentData.features;
                 const epics = this.currentData.epics;
                 const tasks = this.currentData.tasks;
-                
-                const completedStories = stories.filter(s => 
+
+                const completedStories = stories.filter(s =>
                     ['Done', 'Closed', 'Resolved'].includes(s.fields['System.State'])
                 );
-                
-                const totalPoints = stories.reduce((sum, s) => 
+
+                const totalPoints = stories.reduce((sum, s) =>
                     sum + (s.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0), 0
                 );
-                
-                const completedPoints = completedStories.reduce((sum, s) => 
+
+                const completedPoints = completedStories.reduce((sum, s) =>
                     sum + (s.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0), 0
                 );
 
@@ -1393,41 +2256,74 @@
             }
 
             calculateQualityMetrics() {
-                const bugs = this.currentData.bugs;
-                const defects = this.currentData.defects;
+                if (!this.currentData) return;
+
+                const bugs = this.currentData.bugs || [];
+                const defects = this.currentData.defects || [];
                 const allIssues = [...bugs, ...defects];
-                
+
+                // Real bug density calculation per story point and per KLOC
+                const totalStoryPoints = (this.currentData.userStories || []).reduce((sum, story) =>
+                    sum + (story.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0), 0);
+
+                const completedStoryPoints = (this.currentData.userStories || [])
+                    .filter(story => ['Done', 'Closed', 'Resolved'].includes(story.fields['System.State']))
+                    .reduce((sum, story) => sum + (story.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0), 0);
+
+                // Calculate bug injection rate (bugs found per completed work)
+                const bugInjectionRate = completedStoryPoints > 0 ? bugs.length / completedStoryPoints : 0;
+
+                // Calculate defect leakage (production defects per completed work)
+                const defectLeakageRate = completedStoryPoints > 0 ? defects.length / completedStoryPoints : 0;
+
+                // Real escape rate calculation
+                const totalIssuesFound = bugs.length + defects.length;
+                const defectEscapeRate = totalIssuesFound > 0 ? (defects.length / totalIssuesFound) * 100 : 0;
+
+                // Categorize by severity and priority
                 const severityCount = { critical: 0, high: 0, medium: 0, low: 0 };
                 const priorityCount = { 1: 0, 2: 0, 3: 0, 4: 0 };
                 const environmentCount = { dev: 0, qa: 0, uat: 0, prod: 0 };
-                
-                bugs.forEach(bug => {
-                    const severity = bug.fields['Microsoft.VSTS.Common.Severity'] || '3 - Medium';
-                    const priority = bug.fields['Microsoft.VSTS.Common.Priority'] || 3;
-                    const env = this.detectEnvironment(bug);
-                    
+
+                // Calculate mean time to detection and resolution
+                const resolutionTimes = [];
+                const reopenedIssues = [];
+
+                allIssues.forEach(issue => {
+                    const severity = issue.fields['Microsoft.VSTS.Common.Severity'] || '3 - Medium';
+                    const priority = issue.fields['Microsoft.VSTS.Common.Priority'] || 3;
+                    const env = this.detectEnvironment(issue);
+                    const createdDate = new Date(issue.fields['System.CreatedDate']);
+                    const state = issue.fields['System.State'];
+
                     if (severity.includes('1') || severity.toLowerCase().includes('critical')) severityCount.critical++;
                     else if (severity.includes('2') || severity.toLowerCase().includes('high')) severityCount.high++;
                     else if (severity.includes('3') || severity.toLowerCase().includes('medium')) severityCount.medium++;
                     else severityCount.low++;
-                    
+
                     priorityCount[priority] = (priorityCount[priority] || 0) + 1;
                     environmentCount[env] = (environmentCount[env] || 0) + 1;
-                });
 
-                defects.forEach(defect => {
-                    const severity = defect.fields['Microsoft.VSTS.Common.Severity'] || '3 - Medium';
-                    const priority = defect.fields['Microsoft.VSTS.Common.Priority'] || 3;
-                    
-                    if (severity.includes('1') || severity.toLowerCase().includes('critical')) severityCount.critical++;
-                    else if (severity.includes('2') || severity.toLowerCase().includes('high')) severityCount.high++;
-                    
-                    priorityCount[priority] = (priorityCount[priority] || 0) + 1;
-                    environmentCount.prod++;
-                });
+                    // Resolution time calculation
+                    if (['Resolved', 'Closed', 'Done'].includes(state)) {
+                        const resolvedDate = issue.fields['Microsoft.VSTS.Common.ResolvedDate'] ?
+                            new Date(issue.fields['Microsoft.VSTS.Common.ResolvedDate']) :
+                            new Date(issue.fields['System.ChangedDate']);
 
-                const totalBugsAndDefects = bugs.length + defects.length;
-                const defectEscapeRate = totalBugsAndDefects > 0 ? (defects.length / totalBugsAndDefects) * 100 : 0;
+                        const resolutionDays = (resolvedDate - createdDate) / (1000 * 60 * 60 * 24);
+                        if (resolutionDays >= 0 && resolutionDays < 365) {
+                            resolutionTimes.push(resolutionDays);
+                        }
+                    }
+
+                    // Check for reopened issues
+                    const history = issue.fields['System.History'] || '';
+                    if (history.toLowerCase().includes('reopen') ||
+                        (issue.fields['Microsoft.VSTS.Common.ResolvedReason'] === 'Fixed' &&
+                            !['Resolved', 'Closed'].includes(state))) {
+                        reopenedIssues.push(issue);
+                    }
+                });
 
                 this.metrics.quality = {
                     totalBugs: bugs.length,
@@ -1438,8 +2334,23 @@
                     bugsBySeverity: severityCount,
                     bugsByPriority: priorityCount,
                     defectEscapeRate: defectEscapeRate,
-                    bugDensity: this.metrics.delivery?.completedPoints > 0 ? 
-                        totalBugsAndDefects / this.metrics.delivery.completedPoints : 0
+                    bugDensity: {
+                        perStoryPoint: totalStoryPoints > 0 ? (bugs.length / totalStoryPoints) : 0,
+                        perCompletedStoryPoint: completedStoryPoints > 0 ? (bugs.length / completedStoryPoints) : 0
+                    },
+                    defectLeakage: {
+                        rate: defectLeakageRate,
+                        count: defects.length
+                    },
+                    resolutionMetrics: {
+                        meanTimeToResolve: resolutionTimes.length > 0 ?
+                            resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length : 0,
+                        medianTimeToResolve: this.calculateMedian(resolutionTimes),
+                        reopenRate: allIssues.length > 0 ? (reopenedIssues.length / allIssues.length) * 100 : 0,
+                        reopenedCount: reopenedIssues.length
+                    },
+                    bugInjectionRate,
+                    qualityTrend: this.calculateQualityTrend(allIssues)
                 };
             }
 
@@ -1447,7 +2358,7 @@
                 const tags = (bug.fields['System.Tags'] || '').toLowerCase();
                 const areaPath = (bug.fields['System.AreaPath'] || '').toLowerCase();
                 const title = (bug.fields['System.Title'] || '').toLowerCase();
-                
+
                 if (tags.includes('production') || areaPath.includes('production') || title.includes('production')) return 'prod';
                 if (tags.includes('uat') || areaPath.includes('uat') || title.includes('uat')) return 'uat';
                 if (tags.includes('qa') || areaPath.includes('qa') || title.includes('qa')) return 'qa';
@@ -1455,60 +2366,104 @@
             }
 
             calculateTestingMetrics() {
-                const testCases = this.currentData.testCases;
-                const testTasks = this.currentData.testTasks;
-                const stories = this.currentData.userStories;
-                
-                let manualTests = 0;
-                let automatedTests = 0;
+                if (!this.currentData) return;
+
+                const testCases = this.currentData.testCases || [];
+                const testTasks = this.currentData.testTasks || [];
+                const stories = this.currentData.userStories || [];
+
+                const automationMetrics = {
+                    total: testCases.length,
+                    automated: 0,
+                    manual: 0,
+                    semiAutomated: 0,
+                    automationByCategory: {
+                        unit: { total: 0, automated: 0 },
+                        integration: { total: 0, automated: 0 },
+                        e2e: { total: 0, automated: 0 },
+                        api: { total: 0, automated: 0 },
+                        ui: { total: 0, automated: 0 },
+                        performance: { total: 0, automated: 0 },
+                        security: { total: 0, automated: 0 }
+                    },
+                    executionMetrics: {
+                        automated: { executed: 0, passed: 0, failed: 0, blocked: 0 },
+                        manual: { executed: 0, passed: 0, failed: 0, blocked: 0 }
+                    },
+                    testCategories: {
+                        manual: 0,
+                        automated: 0,
+                        regression: 0,
+                        smoke: 0,
+                        e2e: 0,
+                        api: 0,
+                        integration: 0,
+                        unit: 0
+                    }
+                };
+
                 let executedTests = 0;
                 let passedTests = 0;
                 let failedTests = 0;
-                
-                const testCategories = {
-                    manual: 0,
-                    automated: 0,
-                    regression: 0,
-                    smoke: 0,
-                    e2e: 0,
-                    api: 0,
-                    integration: 0,
-                    unit: 0
-                };
 
-                testCases.forEach(tc => {
-                    const tags = (tc.fields['System.Tags'] || '').toLowerCase();
-                    const state = tc.fields['System.State'];
-                    
-                    // Check if automated
-                    const isAutomated = tags.includes('automated') || tags.includes('automation');
-                    
-                    if (isAutomated) {
-                        automatedTests++;
-                        testCategories.automated++;
+                testCases.forEach(testCase => {
+                    const tags = (testCase.fields['System.Tags'] || '').toLowerCase();
+                    const title = (testCase.fields['System.Title'] || '').toLowerCase();
+                    const state = testCase.fields['System.State'];
+
+                    // Determine automation status
+                    let automationType = 'manual';
+                    if (tags.includes('automated') || tags.includes('auto')) {
+                        automationType = 'automated';
+                        automationMetrics.automated++;
+                        automationMetrics.testCategories.automated++;
+                    } else if (tags.includes('semi-automated') || tags.includes('hybrid')) {
+                        automationType = 'semiAutomated';
+                        automationMetrics.semiAutomated++;
                     } else {
-                        manualTests++;
-                        testCategories.manual++;
+                        automationMetrics.manual++;
+                        automationMetrics.testCategories.manual++;
                     }
-                    
-                    // Check test categories
-                    if (tags.includes('regression')) testCategories.regression++;
-                    if (tags.includes('smoke')) testCategories.smoke++;
-                    if (tags.includes('end to end') || tags.includes('e2e')) testCategories.e2e++;
-                    if (tags.includes('api')) testCategories.api++;
-                    if (tags.includes('integration')) testCategories.integration++;
-                    if (tags.includes('unit')) testCategories.unit++;
-                    
-                    // Check execution status
-                    if (state === 'Closed' || state === 'Resolved' || tags.includes('executed')) {
+
+                    // Categorize by test type
+                    const categories = ['unit', 'integration', 'e2e', 'api', 'ui', 'performance', 'security'];
+                    categories.forEach(category => {
+                        if (tags.includes(category) || title.includes(category)) {
+                            automationMetrics.automationByCategory[category].total++;
+                            if (automationType === 'automated') {
+                                automationMetrics.automationByCategory[category].automated++;
+                            }
+
+                            // Update test categories for compatibility
+                            if (automationMetrics.testCategories.hasOwnProperty(category)) {
+                                automationMetrics.testCategories[category]++;
+                            }
+                        }
+                    });
+
+                    // Check test categories for existing code compatibility
+                    if (tags.includes('regression')) automationMetrics.testCategories.regression++;
+                    if (tags.includes('smoke')) automationMetrics.testCategories.smoke++;
+
+                    // Execution metrics
+                    const executionType = automationType === 'automated' ? 'automated' : 'manual';
+
+                    if (['Closed', 'Resolved'].includes(state) || tags.includes('executed')) {
                         executedTests++;
-                        
+                        automationMetrics.executionMetrics[executionType].executed++;
+
                         if (tags.includes('passed') || state === 'Closed') {
                             passedTests++;
+                            automationMetrics.executionMetrics[executionType].passed++;
                         } else if (tags.includes('failed')) {
                             failedTests++;
+                            automationMetrics.executionMetrics[executionType].failed++;
+                        } else if (tags.includes('blocked')) {
+                            automationMetrics.executionMetrics[executionType].blocked++;
                         } else {
-                            passedTests++; // Default to passed if executed and closed
+                            // Default to passed if executed and closed
+                            passedTests++;
+                            automationMetrics.executionMetrics[executionType].passed++;
                         }
                     }
                 });
@@ -1516,20 +2471,55 @@
                 // Calculate test coverage
                 const storiesWithTests = this.calculateTestCoverage();
 
+                // Calculate automation rates
+                automationMetrics.automationRate = automationMetrics.total > 0 ?
+                    (automationMetrics.automated / automationMetrics.total) * 100 : 0;
+
+                // Calculate pass rates by automation type
+                const autoExec = automationMetrics.executionMetrics.automated;
+                const manualExec = automationMetrics.executionMetrics.manual;
+
+                automationMetrics.automatedPassRate = autoExec.executed > 0 ?
+                    (autoExec.passed / autoExec.executed) * 100 : 0;
+
+                automationMetrics.manualPassRate = manualExec.executed > 0 ?
+                    (manualExec.passed / manualExec.executed) * 100 : 0;
+
+                // Calculate ROI (simplified model)
+                const manualExecutionTime = 30; // minutes per manual test
+                const automatedExecutionTime = 5; // minutes per automated test
+                const automationCreateTime = 240; // minutes to create automated test
+
+                const manualTimeSaved = automationMetrics.automated * manualExecutionTime;
+                const automatedTimeSpent = (automationMetrics.automated * automationCreateTime) +
+                    (autoExec.executed * automatedExecutionTime);
+
+                automationMetrics.automationROI = manualTimeSaved > 0 ?
+                    ((manualTimeSaved - automatedTimeSpent) / automatedTimeSpent) * 100 : 0;
+
+                // Set metrics for backward compatibility
                 this.metrics.testing = {
                     totalTestCases: testCases.length,
-                    manualTests,
-                    automatedTests,
+                    manualTests: automationMetrics.manual,
+                    automatedTests: automationMetrics.automated,
                     executedTests,
                     passedTests,
                     failedTests,
+                    blockedTests: automationMetrics.executionMetrics.automated.blocked + automationMetrics.executionMetrics.manual.blocked,
                     testingTasks: testTasks.length,
-                    automationRate: testCases.length > 0 ? (automatedTests / testCases.length) * 100 : 0,
+                    automationRate: automationMetrics.automationRate,
                     passRate: executedTests > 0 ? (passedTests / executedTests) * 100 : 0,
                     testCoverage: stories.length > 0 ? (storiesWithTests / stories.length) * 100 : 0,
                     storiesWithTests,
                     storiesWithoutTests: stories.length - storiesWithTests,
-                    testCategories
+                    testCategories: automationMetrics.testCategories,
+
+                    // Enhanced metrics
+                    automationByCategory: automationMetrics.automationByCategory,
+                    executionMetrics: automationMetrics.executionMetrics,
+                    automationROI: automationMetrics.automationROI,
+                    automatedPassRate: automationMetrics.automatedPassRate,
+                    manualPassRate: automationMetrics.manualPassRate
                 };
             }
 
@@ -1537,14 +2527,14 @@
                 const stories = this.currentData.userStories;
                 const testCases = this.currentData.testCases;
                 const testTasks = this.currentData.testTasks;
-                
+
                 const storiesWithTestsSet = new Set();
-                
+
                 // Check test cases linked to stories
                 testCases.forEach(tc => {
                     if (tc.relations) {
                         tc.relations.forEach(rel => {
-                            if (rel.rel === 'System.LinkTypes.Related' || 
+                            if (rel.rel === 'System.LinkTypes.Related' ||
                                 rel.rel === 'Microsoft.VSTS.Common.TestedBy-Reverse') {
                                 const linkedId = rel.url.split('/').pop();
                                 storiesWithTestsSet.add(linkedId);
@@ -1552,7 +2542,7 @@
                         });
                     }
                 });
-                
+
                 // Check testing tasks linked to stories
                 testTasks.forEach(task => {
                     if (task.relations) {
@@ -1564,84 +2554,91 @@
                         });
                     }
                 });
-                
+
                 return storiesWithTestsSet.size;
             }
 
             calculateTeamMetrics() {
-                const teamMap = new Map();
-                
-                this.currentData.workItems.forEach(item => {
-                    const assignee = item.fields['System.AssignedTo']?.displayName;
-                    if (!assignee) return;
+                if (!this.currentData) return;
 
-                    if (!teamMap.has(assignee)) {
-                        teamMap.set(assignee, {
-                            stories: 0,
-                            features: 0,
-                            tasks: 0,
-                            bugs: 0,
-                            points: 0,
-                            completedPoints: 0,
-                            testCasesCreated: 0,
-                            testCasesExecuted: 0,
-                            workInProgress: 0
-                        });
+                const individualMetrics = new Map();
+                const allWorkItems = this.currentData.workItems || [];
+
+                allWorkItems.forEach(item => {
+                    const assignee = item.fields['System.AssignedTo']?.displayName;
+                    const creator = item.fields['System.CreatedBy']?.displayName;
+
+                    if (assignee) {
+                        if (!individualMetrics.has(assignee)) {
+                            individualMetrics.set(assignee, this.createEmptyIndividualMetrics());
+                        }
+
+                        const metrics = individualMetrics.get(assignee);
+                        this.updateIndividualMetrics(metrics, item, 'assignee');
                     }
 
-                    const member = teamMap.get(assignee);
-                    const type = item.fields['System.WorkItemType'];
-                    const state = item.fields['System.State'];
-                    const points = item.fields['Microsoft.VSTS.Scheduling.StoryPoints'] || 0;
-                    
-                    switch (type) {
-                        case 'User Story':
-                        case 'Product Backlog Item':
-                            member.stories++;
-                            member.points += points;
-                            if (['Done', 'Closed'].includes(state)) {
-                                member.completedPoints += points;
-                            } else if (['Active', 'In Progress'].includes(state)) {
-                                member.workInProgress++;
-                            }
-                            break;
-                        case 'Feature':
-                            member.features++;
-                            break;
-                        case 'Task':
-                            member.tasks++;
-                            if (['Active', 'In Progress'].includes(state)) {
-                                member.workInProgress++;
-                            }
-                            break;
-                        case 'Bug':
-                            member.bugs++;
-                            break;
-                        case 'Test Case':
-                            if (item.fields['System.CreatedBy']?.displayName === assignee) {
-                                member.testCasesCreated++;
-                            }
-                            if (['Closed', 'Resolved'].includes(state)) {
-                                member.testCasesExecuted++;
-                            }
-                            break;
+                    if (creator && creator !== assignee) {
+                        if (!individualMetrics.has(creator)) {
+                            individualMetrics.set(creator, this.createEmptyIndividualMetrics());
+                        }
+
+                        const metrics = individualMetrics.get(creator);
+                        this.updateIndividualMetrics(metrics, item, 'creator');
                     }
                 });
 
-                const teamSize = teamMap.size;
-                const totalVelocity = Array.from(teamMap.values())
-                    .reduce((sum, member) => sum + member.completedPoints, 0);
+                // Calculate performance scores and trends for each individual
+                individualMetrics.forEach((metrics, person) => {
+                    metrics.performanceScore = this.calculatePerformanceScore(metrics);
+                    metrics.qualityScore = this.calculateQualityScore(metrics);
+                    metrics.velocityTrend = this.calculateIndividualVelocityTrend(metrics);
+                    metrics.workloadBalance = this.calculateWorkloadBalance(metrics);
+                });
+
+                const teamSize = individualMetrics.size;
+                const totalVelocity = Array.from(individualMetrics.values())
+                    .reduce((sum, member) => sum + (member.storyPoints?.completed || 0), 0);
+
+                // Maintain backward compatibility with existing structure
+                const teamMap = new Map();
+                individualMetrics.forEach((metrics, name) => {
+                    teamMap.set(name, {
+                        stories: metrics.workTypes.stories,
+                        features: metrics.workTypes.features,
+                        tasks: metrics.workTypes.tasks,
+                        bugs: metrics.workTypes.bugs,
+                        points: metrics.storyPoints.assigned,
+                        completedPoints: metrics.storyPoints.completed,
+                        testCasesCreated: metrics.quality.testCasesCreated,
+                        testCasesExecuted: metrics.quality.testCasesExecuted,
+                        workInProgress: metrics.workItems.inProgress,
+                        performanceScore: metrics.performanceScore,
+                        qualityScore: metrics.qualityScore
+                    });
+                });
 
                 this.metrics.team = {
                     members: teamMap,
                     teamSize,
                     totalVelocity,
-                    averageVelocity: teamSize > 0 ? totalVelocity / teamSize : 0
+                    averageVelocity: teamSize > 0 ? totalVelocity / teamSize : 0,
+
+                    // Enhanced metrics
+                    detailedMetrics: individualMetrics,
+                    skillCoverage: this.calculateSkillCoverage(teamMap),
+                    workloadBalance: this.calculateTeamWorkloadBalance(teamMap),
+                    collaborationScore: this.calculateCollaborationScore(individualMetrics)
                 };
             }
 
             calculateIndividualMetrics() {
+                // Use the detailed metrics calculated in calculateTeamMetrics
                 this.metrics.individual = this.metrics.team?.members || new Map();
+
+                // Add the enhanced individual metrics
+                if (this.metrics.team?.detailedMetrics) {
+                    this.metrics.individualDetailed = this.metrics.team.detailedMetrics;
+                }
             }
 
             saveSettings() {
@@ -1652,13 +2649,13 @@
                     server: document.getElementById('proxyServer').value.trim(),
                     port: document.getElementById('proxyPort').value.trim()
                 };
-                
+
                 this.saveConfiguration();
                 this.showToast('Settings saved successfully', 'success');
-                
+
                 const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
                 modal.hide();
-                
+
                 // Test connection with new settings
                 if (this.config.organization && this.config.project && this.config.pat) {
                     this.testConnection();
@@ -1741,14 +2738,14 @@
 
             showDashboard() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData || !this.currentData.workItems || this.currentData.workItems.length === 0) {
                     this.showInitialState();
                     return;
                 }
 
                 const overallHealth = this.calculateOverallHealth();
-                
+
                 content.innerHTML = `
                     <!-- Executive Summary -->
                     <div class="row mb-3">
@@ -1884,7 +2881,7 @@
 
             showDeliveryMetrics() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData) {
                     content.innerHTML = '<div class="error-container">No data available. Please load data first.</div>';
                     return;
@@ -2032,7 +3029,7 @@
 
             showQualityMetrics() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData) {
                     content.innerHTML = '<div class="error-container">No data available. Please load data first.</div>';
                     return;
@@ -2203,7 +3200,7 @@
 
             showTestingAnalytics() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData) {
                     content.innerHTML = '<div class="error-container">No data available. Please load data first.</div>';
                     return;
@@ -2397,7 +3394,7 @@
 
             showTeamPerformance() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData) {
                     content.innerHTML = '<div class="error-container">No data available. Please load data first.</div>';
                     return;
@@ -2546,7 +3543,7 @@
 
             showIndividualMetrics() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 if (!this.currentData) {
                     content.innerHTML = '<div class="error-container">No data available. Please load data first.</div>';
                     return;
@@ -2665,7 +3662,7 @@
 
             showReports() {
                 const content = document.getElementById('dashboardContent');
-                
+
                 content.innerHTML = `
                     <div class="section-header">
                         <h2 class="section-title">Reports & Export</h2>
@@ -2792,7 +3789,7 @@
 
             countByStatus(items) {
                 const count = { new: 0, active: 0, resolved: 0, closed: 0 };
-                
+
                 items.forEach(item => {
                     const state = item.fields['System.State'];
                     if (state === 'New') count.new++;
@@ -2801,14 +3798,14 @@
                     else if (['Closed', 'Done'].includes(state)) count.closed++;
                     else count.new++;
                 });
-                
+
                 return count;
             }
 
             generateQualityOverviewRows() {
                 const bugs = this.metrics.quality.bugsBySeverity;
                 const total = Object.values(bugs).reduce((sum, count) => sum + count, 0);
-                
+
                 return `
                     <tr>
                         <td><strong>Bugs & Defects</strong></td>
@@ -2823,7 +3820,7 @@
 
             generateTestingOverviewRows() {
                 const testing = this.metrics.testing;
-                
+
                 return [
                     { category: 'Total Test Cases', count: testing.totalTestCases, percentage: 100, status: 'Active' },
                     { category: 'Automated Tests', count: testing.automatedTests, percentage: testing.automationRate, status: testing.automationRate > 70 ? 'Good' : 'Needs Improvement' },
@@ -2911,7 +3908,7 @@
             generateEnvironmentRows() {
                 const envs = this.metrics.quality.bugsByEnvironment;
                 const total = Object.values(envs).reduce((sum, count) => sum + count, 0);
-                
+
                 return [
                     { env: 'Development', count: envs.dev || 0, classification: 'Bug' },
                     { env: 'QA/Testing', count: envs.qa || 0, classification: 'Bug' },
@@ -2919,7 +3916,7 @@
                     { env: 'Production', count: envs.prod || 0, classification: 'Defect' }
                 ].map(row => {
                     const percentage = total > 0 ? (row.count / total) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td><strong>${row.env}</strong></td>
@@ -2941,7 +3938,7 @@
 
             generateBugsDetailRows() {
                 const allBugs = [...(this.currentData.bugs || []), ...(this.currentData.defects || [])];
-                
+
                 return allBugs.slice(0, 100).map(bug => {
                     const id = bug.id;
                     const title = this.truncateText(bug.fields['System.Title'] || '', 50);
@@ -2954,9 +3951,9 @@
                     const created = new Date(bug.fields['System.CreatedDate']).toLocaleDateString();
                     const age = Math.floor((new Date() - new Date(bug.fields['System.CreatedDate'])) / (1000 * 60 * 60 * 24));
 
-                    const severityClass = severity.includes('1') ? 'severity-critical' : 
-                                         severity.includes('2') ? 'severity-high' : 
-                                         severity.includes('3') ? 'severity-medium' : 'severity-low';
+                    const severityClass = severity.includes('1') ? 'severity-critical' :
+                        severity.includes('2') ? 'severity-high' :
+                            severity.includes('3') ? 'severity-medium' : 'severity-low';
 
                     return `
                         <tr>
@@ -2981,7 +3978,7 @@
                 const quality = Math.max(0, 100 - (this.metrics.quality?.defectEscapeRate || 0));
                 const testing = this.metrics.testing?.passRate || 0;
                 const automation = this.metrics.testing?.automationRate || 0;
-                
+
                 return Math.round((delivery + quality + testing + automation) / 4);
             }
 
@@ -3014,7 +4011,7 @@
 
             formatTags(tags) {
                 if (!tags) return '';
-                
+
                 return tags.split(';')
                     .filter(tag => tag.trim())
                     .slice(0, 3)
@@ -3025,7 +4022,7 @@
             generateSeverityRows() {
                 const severity = this.metrics.quality.bugsBySeverity;
                 const total = Object.values(severity).reduce((sum, count) => sum + count, 0);
-                
+
                 return [
                     { name: 'Critical', count: severity.critical || 0, class: 'severity-critical' },
                     { name: 'High', count: severity.high || 0, class: 'severity-high' },
@@ -3033,9 +4030,9 @@
                     { name: 'Low', count: severity.low || 0, class: 'severity-low' }
                 ].map(row => {
                     const percentage = total > 0 ? (row.count / total) * 100 : 0;
-                    const status = row.name === 'Critical' && row.count > 0 ? 'Urgent' : 
-                                  row.name === 'High' && row.count > 5 ? 'High Priority' : 'Normal';
-                    
+                    const status = row.name === 'Critical' && row.count > 0 ? 'Urgent' :
+                        row.name === 'High' && row.count > 5 ? 'High Priority' : 'Normal';
+
                     return `
                         <tr>
                             <td><span class="severity-badge ${row.class}">${row.name}</span></td>
@@ -3050,7 +4047,7 @@
             generatePriorityRows() {
                 const priority = this.metrics.quality.bugsByPriority;
                 const total = Object.values(priority).reduce((sum, count) => sum + count, 0);
-                
+
                 return [
                     { name: 'P1 (Critical)', count: priority[1] || 0, focus: 'Immediate' },
                     { name: 'P2 (High)', count: priority[2] || 0, focus: 'This Sprint' },
@@ -3058,7 +4055,7 @@
                     { name: 'P4 (Low)', count: priority[4] || 0, focus: 'Backlog' }
                 ].map(row => {
                     const percentage = total > 0 ? (row.count / total) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td>${row.name}</td>
@@ -3073,14 +4070,14 @@
             generateTestExecutionRows() {
                 const testing = this.metrics.testing;
                 const notExecuted = testing.totalTestCases - testing.executedTests;
-                
+
                 return [
                     { status: 'Passed', count: testing.passedTests, color: 'success' },
                     { status: 'Failed', count: testing.failedTests, color: 'danger' },
                     { status: 'Not Executed', count: notExecuted, color: 'secondary' }
                 ].map(row => {
                     const percentage = testing.totalTestCases > 0 ? (row.count / testing.totalTestCases) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td><strong>${row.status}</strong></td>
@@ -3101,7 +4098,7 @@
             generateTestCategoriesRows() {
                 const categories = this.metrics.testing.testCategories;
                 const total = this.metrics.testing.totalTestCases;
-                
+
                 return [
                     { name: 'Manual Tests', count: categories.manual || 0, type: 'Execution', icon: 'hand-paper' },
                     { name: 'Automated Tests', count: categories.automated || 0, type: 'Execution', icon: 'robot' },
@@ -3113,7 +4110,7 @@
                     { name: 'Unit Tests', count: categories.unit || 0, type: 'Category', icon: 'cube' }
                 ].map(row => {
                     const percentage = total > 0 ? (row.count / total) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td><i class="fas fa-${row.icon} me-1"></i>${row.name}</td>
@@ -3141,18 +4138,18 @@
                     const tags = (tc.fields['System.Tags'] || '').toLowerCase();
                     const priority = tc.fields['Microsoft.VSTS.Common.Priority'] || 3;
                     const created = new Date(tc.fields['System.CreatedDate']).toLocaleDateString();
-                    
+
                     const isAutomated = tags.includes('automated') || tags.includes('automation');
                     const categories = [];
-                    
+
                     if (tags.includes('regression')) categories.push('Regression');
                     if (tags.includes('smoke')) categories.push('Smoke');
                     if (tags.includes('api')) categories.push('API');
                     if (tags.includes('e2e')) categories.push('E2E');
-                    
-                    const executionStatus = state === 'Closed' || tags.includes('executed') ? 
-                        (tags.includes('passed') || state === 'Closed' ? 'Passed' : 
-                         tags.includes('failed') ? 'Failed' : 'Passed') : 'Not Executed';
+
+                    const executionStatus = state === 'Closed' || tags.includes('executed') ?
+                        (tags.includes('passed') || state === 'Closed' ? 'Passed' :
+                            tags.includes('failed') ? 'Failed' : 'Passed') : 'Not Executed';
 
                     return `
                         <tr>
@@ -3172,19 +4169,19 @@
 
             generateTestCoverageRows() {
                 const testing = this.metrics.testing;
-                
+
                 return [
-                    { 
-                        status: 'Stories with Tests', 
-                        count: testing.storiesWithTests, 
-                        percentage: testing.testCoverage, 
-                        risk: testing.testCoverage > 80 ? 'Low' : testing.testCoverage > 60 ? 'Medium' : 'High' 
+                    {
+                        status: 'Stories with Tests',
+                        count: testing.storiesWithTests,
+                        percentage: testing.testCoverage,
+                        risk: testing.testCoverage > 80 ? 'Low' : testing.testCoverage > 60 ? 'Medium' : 'High'
                     },
-                    { 
-                        status: 'Stories without Tests', 
-                        count: testing.storiesWithoutTests, 
-                        percentage: 100 - testing.testCoverage, 
-                        risk: testing.storiesWithoutTests > 10 ? 'High' : testing.storiesWithoutTests > 5 ? 'Medium' : 'Low' 
+                    {
+                        status: 'Stories without Tests',
+                        count: testing.storiesWithoutTests,
+                        percentage: 100 - testing.testCoverage,
+                        risk: testing.storiesWithoutTests > 10 ? 'High' : testing.storiesWithoutTests > 5 ? 'Medium' : 'Low'
                     }
                 ].map(row => `
                     <tr>
@@ -3203,7 +4200,7 @@
                     const state = task.fields['System.State'];
                     const assignedTo = task.fields['System.AssignedTo']?.displayName || 'Unassigned';
                     const taskTitle = title.toLowerCase();
-                    
+
                     let testType = 'General Testing';
                     if (taskTitle.includes('sit')) testType = 'SIT Testing';
                     else if (taskTitle.includes('uat')) testType = 'UAT Testing';
@@ -3225,7 +4222,7 @@
             generateTeamSummaryRows() {
                 const team = this.metrics.team;
                 const members = Array.from(team.members.values());
-                
+
                 const aggregates = {
                     stories: { total: 0, completed: 0 },
                     features: { total: 0, completed: 0 },
@@ -3298,7 +4295,7 @@
             generateWorkloadDistributionRows() {
                 const members = Array.from(this.metrics.team.members.values());
                 const workloads = members.map(m => m.workInProgress);
-                
+
                 const ranges = [
                     { range: '0-2 items', min: 0, max: 2, status: 'Under-utilized', recommendation: 'Assign more work' },
                     { range: '3-5 items', min: 3, max: 5, status: 'Optimal', recommendation: 'Maintain current load' },
@@ -3309,7 +4306,7 @@
                 return ranges.map(range => {
                     const count = workloads.filter(w => w >= range.min && w <= range.max).length;
                     const percentage = this.metrics.team.teamSize > 0 ? (count / this.metrics.team.teamSize) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td><strong>${range.range}</strong></td>
@@ -3325,25 +4322,25 @@
             generateSkillsCoverageRows() {
                 const members = Array.from(this.metrics.team.members.values());
                 const teamSize = this.metrics.team.teamSize;
-                
+
                 const skills = [
-                    { 
-                        area: 'Development', 
+                    {
+                        area: 'Development',
                         contributors: members.filter(m => m.stories > 0 || m.features > 0).length,
                         risk: 'Low'
                     },
-                    { 
-                        area: 'Testing', 
+                    {
+                        area: 'Testing',
                         contributors: members.filter(m => m.testCasesCreated > 0 || m.testCasesExecuted > 0).length,
                         risk: 'Medium'
                     },
-                    { 
-                        area: 'Bug Resolution', 
+                    {
+                        area: 'Bug Resolution',
                         contributors: members.filter(m => m.bugs > 0).length,
                         risk: 'Low'
                     },
-                    { 
-                        area: 'Task Management', 
+                    {
+                        area: 'Task Management',
                         contributors: members.filter(m => m.tasks > 0).length,
                         risk: 'Low'
                     }
@@ -3352,7 +4349,7 @@
                 return skills.map(skill => {
                     const coverage = teamSize > 0 ? (skill.contributors / teamSize) * 100 : 0;
                     const riskLevel = coverage > 70 ? 'Low' : coverage > 40 ? 'Medium' : 'High';
-                    
+
                     return `
                         <tr>
                             <td><strong>${skill.area}</strong></td>
@@ -3367,7 +4364,7 @@
             generateWorkTypeDistributionRows() {
                 const members = Array.from(this.metrics.team.members.values());
                 const totalWork = members.reduce((sum, m) => sum + m.stories + m.features + m.tasks + m.bugs, 0);
-                
+
                 const workTypes = [
                     { type: 'Development', count: members.reduce((sum, m) => sum + m.stories + m.features, 0) },
                     { type: 'Task Execution', count: members.reduce((sum, m) => sum + m.tasks, 0) },
@@ -3379,7 +4376,7 @@
                     const percentage = totalWork > 0 ? (work.count / totalWork) * 100 : 0;
                     const focusLevel = percentage > 40 ? 'High' : percentage > 20 ? 'Medium' : 'Low';
                     const balance = percentage > 60 ? 'Over-focused' : percentage < 10 ? 'Under-focused' : 'Balanced';
-                    
+
                     return `
                         <tr>
                             <td><strong>${work.type}</strong></td>
@@ -3394,7 +4391,7 @@
             generateIndividualRows() {
                 return Array.from(this.metrics.individual.entries()).map(([name, data]) => {
                     const contributionScore = this.calculateContributionScore(data);
-                    
+
                     return `
                         <tr>
                             <td><strong>${name}</strong></td>
@@ -3424,7 +4421,7 @@
                     const totalWork = data.stories + data.tasks + data.bugs;
                     const testingWork = data.testCasesCreated + data.testCasesExecuted;
                     const testingFocus = totalWork > 0 ? (testingWork / totalWork) * 100 : 0;
-                    
+
                     return `
                         <tr>
                             <td><strong>${name}</strong></td>
@@ -3443,10 +4440,10 @@
                     const devWork = data.stories + data.features;
                     const totalWork = devWork + data.tasks + data.bugs + data.testCasesCreated + data.testCasesExecuted;
                     const devFocus = totalWork > 0 ? (devWork / totalWork) * 100 : 0;
-                    
-                    const specialization = devFocus > 70 ? 'Primary Developer' : 
-                                         devFocus > 40 ? 'Mixed Role' : 'Supporting Role';
-                    
+
+                    const specialization = devFocus > 70 ? 'Primary Developer' :
+                        devFocus > 40 ? 'Mixed Role' : 'Supporting Role';
+
                     return `
                         <tr>
                             <td><strong>${name}</strong></td>
@@ -3463,11 +4460,11 @@
                     const qualityWork = data.bugs + data.testCasesCreated + data.testCasesExecuted;
                     const totalWork = data.stories + data.features + data.tasks + qualityWork;
                     const qualityFocus = totalWork > 0 ? (qualityWork / totalWork) * 100 : 0;
-                    
+
                     const specialization = qualityWork === 0 ? 'No Quality Work' :
-                                         qualityFocus > 50 ? 'Quality Specialist' : 
-                                         qualityFocus > 25 ? 'Quality Contributor' : 'Limited Quality Work';
-                    
+                        qualityFocus > 50 ? 'Quality Specialist' :
+                            qualityFocus > 25 ? 'Quality Contributor' : 'Limited Quality Work';
+
                     return `
                         <tr>
                             <td><strong>${name}</strong></td>
@@ -3526,7 +4523,7 @@
 
             calculateContributionScore(memberData) {
                 let score = 0;
-                
+
                 // Points for different types of work
                 score += memberData.completedPoints * 2; // Story points are weighted high
                 score += memberData.stories * 5;
@@ -3606,29 +4603,29 @@
             exportToExcel() {
                 try {
                     const wb = XLSX.utils.book_new();
-                    
+
                     // Executive Summary Sheet
                     this.addExecutiveSummarySheet(wb);
-                    
+
                     // Delivery Metrics Sheet
                     this.addDeliveryMetricsSheet(wb);
-                    
+
                     // Quality Metrics Sheet
                     this.addQualityMetricsSheet(wb);
-                    
+
                     // Testing Analytics Sheet
                     this.addTestingAnalyticsSheet(wb);
-                    
+
                     // Team Performance Sheet
                     this.addTeamPerformanceSheet(wb);
-                    
+
                     // Raw Data Sheets
                     this.addRawDataSheets(wb);
-                    
+
                     // Save the file
                     const fileName = `ADO_Metrics_Report_${this.selectedAreaPath?.displayName || 'All'}_${new Date().toISOString().split('T')[0]}.xlsx`;
                     XLSX.writeFile(wb, fileName);
-                    
+
                     this.showToast('Excel report exported successfully', 'success');
                 } catch (error) {
                     console.error('Error exporting to Excel:', error);
@@ -3638,7 +4635,7 @@
 
             addExecutiveSummarySheet(wb) {
                 const overallHealth = this.calculateOverallHealth();
-                
+
                 const data = [
                     ['ADO Metrics Executive Summary', '', '', '', ''],
                     [`Generated: ${new Date().toLocaleString()}`, '', '', '', ''],
@@ -3683,7 +4680,7 @@
                 ];
 
                 const ws = XLSX.utils.aoa_to_sheet(data);
-                
+
                 // Set column widths
                 ws['!cols'] = [
                     { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 10 }
@@ -3771,7 +4768,7 @@
                 // Add environment data
                 const envs = this.metrics.quality.bugsByEnvironment;
                 const total = Object.values(envs).reduce((sum, count) => sum + count, 0);
-                
+
                 [
                     { env: 'Development', count: envs.dev || 0, classification: 'Bug' },
                     { env: 'QA/Testing', count: envs.qa || 0, classification: 'Bug' },
@@ -3835,7 +4832,7 @@
                 // Add test categories
                 const categories = this.metrics.testing.testCategories;
                 const total = this.metrics.testing.totalTestCases;
-                
+
                 Object.entries(categories).forEach(([category, count]) => {
                     const percentage = total > 0 ? (count / total) * 100 : 0;
                     data.push([
@@ -3854,7 +4851,7 @@
                 this.currentData.testCases.forEach(tc => {
                     const tags = (tc.fields['System.Tags'] || '').toLowerCase();
                     const isAutomated = tags.includes('automated') || tags.includes('automation');
-                    
+
                     data.push([
                         tc.id,
                         tc.fields['System.Title'] || '',
@@ -3908,12 +4905,12 @@
                 data.push(['', '', '', '', '', '', '']);
                 data.push(['TEAM STATISTICS', '', '', '', '', '', '']);
                 data.push(['Statistic', 'Value', '', '', '', '', '']);
-                
+
                 const members = Array.from(this.metrics.individual.values());
                 const totalStories = members.reduce((sum, m) => sum + m.stories, 0);
                 const totalPoints = members.reduce((sum, m) => sum + m.completedPoints, 0);
                 const totalTests = members.reduce((sum, m) => sum + m.testCasesCreated, 0);
-                
+
                 data.push(['Total Stories Worked', totalStories, '', '', '', '', '']);
                 data.push(['Total Points Delivered', totalPoints, '', '', '', '', '']);
                 data.push(['Total Tests Created', totalTests, '', '', '', '', '']);
@@ -3952,7 +4949,7 @@
 
                 const wsWorkItems = XLSX.utils.aoa_to_sheet(workItemsData);
                 wsWorkItems['!cols'] = [
-                    { wch: 10 }, { wch: 60 }, { wch: 15 }, { wch: 12 }, { wch: 20 }, 
+                    { wch: 10 }, { wch: 60 }, { wch: 15 }, { wch: 12 }, { wch: 20 },
                     { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 30 }
                 ];
 
@@ -3965,39 +4962,166 @@
                 return 'At Risk';
             }
 
-            exportToPDF() {
-                // Note: This is a placeholder for PDF export
-                // In a real implementation, you would use jsPDF with more sophisticated formatting
-                this.showToast('PDF export functionality would be implemented with jsPDF library', 'info');
+            async exportToPDF() {
+                try {
+                    // Check if jsPDF is available
+                    if (typeof window.jspdf === 'undefined') {
+                        // Fallback if jsPDF not loaded
+                        this.showToast('PDF export requires jsPDF library. Loading...', 'info');
+
+                        // Try to load jsPDF dynamically
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                        script.onload = () => this.exportToPDF(); // Retry after loading
+                        document.head.appendChild(script);
+                        return;
+                    }
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    let yPosition = 20;
+
+                    // Title page
+                    doc.setFontSize(24);
+                    doc.setTextColor(148, 25, 107);
+                    doc.text('ADO Metrics Dashboard Report', 105, yPosition, { align: 'center' });
+
+                    yPosition += 15;
+                    doc.setFontSize(12);
+                    doc.setTextColor(100);
+                    doc.text(`Generated: ${new Date().toLocaleString()}`, 105, yPosition, { align: 'center' });
+                    doc.text(`Area Path: ${this.selectedAreaPath?.displayName || 'All'}`, 105, yPosition + 5, { align: 'center' });
+                    doc.text(`Iteration: ${this.selectedIteration?.displayName || 'All'}`, 105, yPosition + 10, { align: 'center' });
+
+                    yPosition += 25;
+
+                    // Executive Summary Section
+                    doc.setFontSize(16);
+                    doc.setTextColor(0);
+                    doc.text('Executive Summary', 20, yPosition);
+                    yPosition += 10;
+
+                    const healthScore = this.calculateOverallHealth();
+                    const summaryData = [
+                        ['Overall Project Health', `${healthScore}%`],
+                        ['Story Completion Rate', `${this.metrics.delivery?.completionRate?.toFixed(1) || 0}%`],
+                        ['Current Velocity', `${this.metrics.delivery?.velocity || 0} points`],
+                        ['Test Automation Rate', `${this.metrics.testing?.automationRate?.toFixed(1) || 0}%`],
+                        ['Test Pass Rate', `${this.metrics.testing?.passRate?.toFixed(1) || 0}%`],
+                        ['Total Bugs (Lower Env)', `${this.metrics.quality?.totalBugs || 0}`],
+                        ['Production Defects', `${this.metrics.quality?.totalDefects || 0}`],
+                        ['Team Size', `${this.metrics.team?.teamSize || 0} members`]
+                    ];
+
+                    // Add summary table using simple text if autoTable not available
+                    if (typeof doc.autoTable === 'function') {
+                        doc.autoTable({
+                            startY: yPosition,
+                            head: [['Metric', 'Value']],
+                            body: summaryData,
+                            theme: 'grid',
+                            headStyles: {
+                                fillColor: [148, 25, 107],
+                                textColor: [255, 255, 255]
+                            },
+                            margin: { left: 20, right: 20 }
+                        });
+                        yPosition = doc.lastAutoTable.finalY + 15;
+                    } else {
+                        // Fallback to simple text table
+                        doc.setFontSize(12);
+                        summaryData.forEach(([metric, value]) => {
+                            doc.text(`${metric}: ${value}`, 20, yPosition);
+                            yPosition += 7;
+                        });
+                        yPosition += 10;
+                    }
+
+                    // Add new page for detailed metrics
+                    if (yPosition > 200) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+
+                    // Delivery Metrics Section
+                    doc.setFontSize(16);
+                    doc.text('Delivery Metrics', 20, yPosition);
+                    yPosition += 10;
+
+                    const deliveryData = [
+                        ['Total User Stories', this.metrics.delivery?.totalStories || 0],
+                        ['Completed Stories', this.metrics.delivery?.completedStories || 0],
+                        ['Story Points Delivered', this.metrics.delivery?.velocity || 0],
+                        ['Blocked Items', this.metrics.delivery?.blockedItems || 0],
+                        ['Work in Progress', this.metrics.delivery?.workInProgress || 0]
+                    ];
+
+                    if (typeof doc.autoTable === 'function') {
+                        doc.autoTable({
+                            startY: yPosition,
+                            head: [['Metric', 'Count']],
+                            body: deliveryData,
+                            theme: 'striped',
+                            margin: { left: 20, right: 20 }
+                        });
+                        yPosition = doc.lastAutoTable.finalY + 15;
+                    } else {
+                        doc.setFontSize(12);
+                        deliveryData.forEach(([metric, value]) => {
+                            doc.text(`${metric}: ${value}`, 20, yPosition);
+                            yPosition += 7;
+                        });
+                        yPosition += 10;
+                    }
+
+                    // Add footer with page numbers
+                    const totalPages = doc.internal.getNumberOfPages();
+                    for (let i = 1; i <= totalPages; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(10);
+                        doc.setTextColor(128);
+                        doc.text(`Page ${i} of ${totalPages}`, 195, 285, { align: 'right' });
+                        doc.text('ADO Metrics Dashboard', 20, 285);
+                    }
+
+                    // Save the PDF
+                    const fileName = `ADO_Metrics_Report_${this.selectedAreaPath?.displayName || 'All'}_${new Date().toISOString().split('T')[0]}.pdf`;
+                    doc.save(fileName);
+
+                    this.showToast('PDF report exported successfully', 'success');
+                } catch (error) {
+                    console.error('Error exporting PDF:', error);
+                    this.showToast(`Error exporting PDF: ${error.message}`, 'error');
+                }
             }
 
             exportToCSV() {
                 try {
                     let csv = 'Category,Metric,Value,Target,Status\n';
-                    
+
                     // Executive metrics
                     csv += `Executive,Overall Health,${this.calculateOverallHealth()}%,80%,${this.getStatusText(this.calculateOverallHealth(), 80)}\n`;
                     csv += `Executive,Story Completion Rate,${this.metrics.delivery?.completionRate?.toFixed(1) || 0}%,80%,${this.getStatusText(this.metrics.delivery?.completionRate, 80)}\n`;
                     csv += `Executive,Current Velocity,${this.metrics.delivery?.velocity || 0},40,${this.getStatusText(this.metrics.delivery?.velocity, 40)}\n`;
-                    
+
                     // Delivery metrics
                     csv += `Delivery,Total Stories,${this.metrics.delivery?.totalStories || 0},-,-\n`;
                     csv += `Delivery,Completed Stories,${this.metrics.delivery?.completedStories || 0},-,-\n`;
                     csv += `Delivery,Story Points Delivered,${this.metrics.delivery?.velocity || 0},-,-\n`;
                     csv += `Delivery,Blocked Items,${this.metrics.delivery?.blockedItems || 0},0,${this.getStatusText(1 - (this.metrics.delivery?.blockedItems || 0), 1)}\n`;
-                    
+
                     // Quality metrics
                     csv += `Quality,Total Bugs,${this.metrics.quality?.totalBugs || 0},-,-\n`;
                     csv += `Quality,Production Defects,${this.metrics.quality?.totalDefects || 0},0,${this.getStatusText(1 - (this.metrics.quality?.totalDefects || 0), 1)}\n`;
                     csv += `Quality,Critical Issues,${this.metrics.quality?.criticalBugs || 0},0,${this.getStatusText(1 - (this.metrics.quality?.criticalBugs || 0), 1)}\n`;
                     csv += `Quality,Defect Escape Rate,${this.metrics.quality?.defectEscapeRate?.toFixed(1) || 0}%,<5%,${this.getStatusText(100 - this.metrics.quality?.defectEscapeRate, 95)}\n`;
-                    
+
                     // Testing metrics
                     csv += `Testing,Total Test Cases,${this.metrics.testing?.totalTestCases || 0},-,-\n`;
                     csv += `Testing,Automation Rate,${this.metrics.testing?.automationRate?.toFixed(1) || 0}%,70%,${this.getStatusText(this.metrics.testing?.automationRate, 70)}\n`;
                     csv += `Testing,Test Coverage,${this.metrics.testing?.testCoverage?.toFixed(1) || 0}%,80%,${this.getStatusText(this.metrics.testing?.testCoverage, 80)}\n`;
                     csv += `Testing,Pass Rate,${this.metrics.testing?.passRate?.toFixed(1) || 0}%,95%,${this.getStatusText(this.metrics.testing?.passRate, 95)}\n`;
-                    
+
                     // Team metrics
                     csv += `Team,Team Size,${this.metrics.team?.teamSize || 0},-,-\n`;
                     csv += `Team,Total Velocity,${this.metrics.team?.totalVelocity || 0},-,-\n`;
@@ -4013,7 +5137,7 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    
+
                     this.showToast('CSV data exported successfully', 'success');
                 } catch (error) {
                     console.error('Error exporting CSV:', error);
@@ -4068,7 +5192,7 @@
                             { from: 'workItems', to: 'testingMetrics', type: 'one-to-many' }
                         ]
                     };
-                    
+
                     // Download as JSON
                     const blob = new Blob([JSON.stringify(powerBIData, null, 2)], { type: 'application/json' });
                     const url = window.URL.createObjectURL(blob);
@@ -4077,7 +5201,7 @@
                     a.download = `ADO_PowerBI_Data_${this.selectedAreaPath?.displayName || 'All'}_${new Date().toISOString().split('T')[0]}.json`;
                     a.click();
                     window.URL.revokeObjectURL(url);
-                    
+
                     this.showToast('PowerBI data template exported successfully', 'success');
                 } catch (error) {
                     console.error('Error exporting PowerBI data:', error);
@@ -4089,7 +5213,7 @@
             showLoading(show, message = 'Loading...') {
                 const spinner = document.getElementById('loadingSpinner');
                 const loadingText = document.getElementById('loadingText');
-                
+
                 if (show) {
                     loadingText.textContent = message;
                     spinner.style.display = 'flex';
@@ -4121,7 +5245,7 @@
                     warning: 'exclamation-triangle',
                     info: 'info-circle'
                 };
-                
+
                 const colorMap = {
                     success: '#28a745',
                     error: '#dc3545',
@@ -4137,9 +5261,9 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `;
-                
+
                 toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-                
+
                 // Auto remove after 5 seconds
                 setTimeout(() => {
                     const toastElement = document.getElementById(toastId);
@@ -4151,19 +5275,19 @@
         }
 
         // Initialize dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             window.dashboard = new ADOMetricsDashboard();
         });
 
         // Additional production-ready error handling
-        window.addEventListener('unhandledrejection', function(event) {
+        window.addEventListener('unhandledrejection', function (event) {
             console.error('Unhandled promise rejection:', event.reason);
             if (window.dashboard) {
                 window.dashboard.showToast('An unexpected error occurred. Please try refreshing the page.', 'error');
             }
         });
 
-        window.addEventListener('error', function(event) {
+        window.addEventListener('error', function (event) {
             console.error('Global error:', event.error);
             if (window.dashboard) {
                 window.dashboard.showToast('An error occurred. Please check the console for details.', 'error');
@@ -4172,8 +5296,8 @@
 
         // Production performance monitoring
         if ('performance' in window) {
-            window.addEventListener('load', function() {
-                setTimeout(function() {
+            window.addEventListener('load', function () {
+                setTimeout(function () {
                     const perfData = performance.getEntriesByType('navigation')[0];
                     console.log('Page Load Performance:', {
                         domContentLoaded: perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
@@ -4185,36 +5309,36 @@
         }
 
         // Auto-save configuration periodically
-        setInterval(function() {
+        setInterval(function () {
             if (window.dashboard && window.dashboard.config) {
                 window.dashboard.saveConfiguration();
             }
         }, 300000); // Save every 5 minutes
 
         // Network status monitoring
-        window.addEventListener('online', function() {
+        window.addEventListener('online', function () {
             if (window.dashboard) {
                 window.dashboard.updateConnectionStatus('connected', 'Network connection restored');
             }
         });
 
-        window.addEventListener('offline', function() {
+        window.addEventListener('offline', function () {
             if (window.dashboard) {
                 window.dashboard.updateConnectionStatus('disconnected', 'Network connection lost');
             }
         });
 
         // Production security measures
-        (function() {
+        (function () {
             // Disable right-click in production
             if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                document.addEventListener('contextmenu', function(e) {
+                document.addEventListener('contextmenu', function (e) {
                     e.preventDefault();
                 });
-                
+
                 // Disable F12, Ctrl+Shift+I, Ctrl+U
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'F12' || 
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'F12' ||
                         (e.ctrlKey && e.shiftKey && e.key === 'I') ||
                         (e.ctrlKey && e.key === 'u')) {
                         e.preventDefault();
@@ -4222,10 +5346,10 @@
                     }
                 });
             }
-            
+
             // Clear console in production
             if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                setInterval(function() {
+                setInterval(function () {
                     console.clear();
                 }, 30000);
             }
@@ -4393,7 +5517,7 @@
             async makeRequest(endpoint, options = {}) {
                 const { method = 'GET', body = null, retries = 0 } = options;
                 const cacheKey = `${method}:${endpoint}:${JSON.stringify(body)}`;
-                
+
                 // Try cache first for GET requests
                 if (method === 'GET') {
                     const cached = window.adoCache.get(cacheKey);
@@ -4405,7 +5529,7 @@
 
                 const baseUrl = `https://dev.azure.com/${this.config.organization}`;
                 const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}/${this.config.project}/_apis/${endpoint}`;
-                
+
                 const headers = {
                     'Authorization': `Basic ${btoa(`:${this.config.pat}`)}`,
                     'Content-Type': 'application/json',
@@ -4417,7 +5541,7 @@
 
                 try {
                     window.logger.debug(`Making ${method} request to ${endpoint}`);
-                    
+
                     const response = await fetch(url, {
                         method,
                         headers,
@@ -4436,7 +5560,7 @@
                     }
 
                     const data = await response.json();
-                    
+
                     // Cache successful GET responses
                     if (method === 'GET') {
                         window.adoCache.set(cacheKey, data);
@@ -4447,7 +5571,7 @@
 
                 } catch (error) {
                     clearTimeout(timeoutId);
-                    
+
                     window.logger.error(`Request failed for ${endpoint}`, {
                         error: error.message,
                         status: error.status,
@@ -4468,11 +5592,11 @@
 
             shouldRetry(error) {
                 // Retry on network errors, timeouts, and server errors (500+)
-                return !error.status || 
-                       error.status >= 500 || 
-                       error.name === 'AbortError' ||
-                       error.message.includes('network') ||
-                       error.message.includes('timeout');
+                return !error.status ||
+                    error.status >= 500 ||
+                    error.name === 'AbortError' ||
+                    error.message.includes('network') ||
+                    error.message.includes('timeout');
             }
 
             delay(ms) {
@@ -4484,7 +5608,7 @@
         class DataValidator {
             static validateWorkItem(item) {
                 const errors = [];
-                
+
                 if (!item || typeof item !== 'object') {
                     errors.push('Work item must be an object');
                     return errors;
@@ -4533,7 +5657,7 @@
 
             static validateTestCase(testCase) {
                 const errors = [];
-                
+
                 if (!testCase || typeof testCase !== 'object') {
                     errors.push('Test case must be an object');
                     return errors;
@@ -4548,7 +5672,7 @@
 
             static validateConfiguration(config) {
                 const errors = [];
-                
+
                 if (!config.organization || typeof config.organization !== 'string') {
                     errors.push('Organization is required and must be a string');
                 }
@@ -4581,7 +5705,7 @@
 
             static validateMetrics(metrics) {
                 const errors = [];
-                
+
                 if (!metrics || typeof metrics !== 'object') {
                     errors.push('Metrics must be an object');
                     return errors;
@@ -4589,7 +5713,7 @@
 
                 // Validate delivery metrics
                 if (metrics.delivery) {
-                    if (typeof metrics.delivery.completionRate === 'number' && 
+                    if (typeof metrics.delivery.completionRate === 'number' &&
                         (metrics.delivery.completionRate < 0 || metrics.delivery.completionRate > 100)) {
                         errors.push('Completion rate must be between 0 and 100');
                     }
@@ -4597,7 +5721,7 @@
 
                 // Validate testing metrics
                 if (metrics.testing) {
-                    if (typeof metrics.testing.automationRate === 'number' && 
+                    if (typeof metrics.testing.automationRate === 'number' &&
                         (metrics.testing.automationRate < 0 || metrics.testing.automationRate > 100)) {
                         errors.push('Automation rate must be between 0 and 100');
                     }
@@ -4860,8 +5984,8 @@
             try {
                 const controller = new AbortController();
                 setTimeout(() => controller.abort(), 5000);
-                
-                await fetch('https://httpbin.org/status/200', { 
+
+                await fetch('https://httpbin.org/status/200', {
                     signal: controller.signal,
                     mode: 'no-cors'
                 });
@@ -4875,7 +5999,7 @@
             if ('memory' in performance) {
                 const memory = performance.memory;
                 const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
-                
+
                 if (usagePercent > 90) {
                     return { status: 'error', message: `High memory usage: ${usagePercent.toFixed(1)}%` };
                 } else if (usagePercent > 70) {
@@ -4930,7 +6054,7 @@
             getSessionSummary() {
                 const now = Date.now();
                 const sessionDuration = now - this.startTime;
-                
+
                 const eventCounts = {};
                 this.events.forEach(event => {
                     eventCounts[event.event] = (eventCounts[event.event] || 0) + 1;
@@ -4975,7 +6099,7 @@
         // Initialize analytics in production
         if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             window.analytics = new AnalyticsCollector();
-            
+
             // Track page views
             window.analytics.track('page_view', {
                 page: 'dashboard',
@@ -4983,7 +6107,7 @@
             });
 
             // Track user interactions
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (e.target.closest('button, a, .nav-link')) {
                     window.analytics.track('user_interaction', {
                         element: e.target.tagName.toLowerCase(),
@@ -4995,7 +6119,7 @@
         }
 
         // Final production setup and validation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Validate browser compatibility
             const requiredFeatures = [
                 'fetch',
@@ -5007,7 +6131,7 @@
             ];
 
             const missingFeatures = requiredFeatures.filter(feature => !(feature in window));
-            
+
             if (missingFeatures.length > 0) {
                 document.body.innerHTML = `
                     <div style="padding: 2rem; text-align: center; font-family: Arial, sans-serif;">
@@ -5033,7 +6157,7 @@
         });
 
         // Production cleanup on page unload
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', function () {
             if (window.dashboard) {
                 window.dashboard.saveConfiguration();
                 window.dashboard.destroyDataTables();
@@ -5056,7 +6180,7 @@
                 analytics: window.analytics,
                 DataValidator,
                 ADOApiClient,
-                clearAllData: function() {
+                clearAllData: function () {
                     localStorage.clear();
                     window.adoCache.clear();
                     window.logger.clearLogs();
@@ -5066,4 +6190,5 @@
         }
     </script>
 </body>
+
 </html>
